@@ -189,7 +189,7 @@ class FasterRCNNModule(LightningModule):
         self.model = model
 
         # metric objects for calculating and averaging accuracy across batches
-        self.train_map = MeanAveragePrecision
+        self.train_map = get_pascalvoc_metrics
         self.val_map = get_pascalvoc_metrics
         self.test_map = get_pascalvoc_metrics
 

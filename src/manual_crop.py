@@ -35,22 +35,23 @@ from src import utils
 log = utils.get_pylogger(__name__)
 
 def crop(cfg: DictConfig) -> Tuple[dict, dict]:
-    SEGMENTATION = cfg.seg_type
-    PERTURBATION = cfg.perturbation
-    DATASET = cfg.dataset
+    SEGMENTATION = 'skin'
+    PERTURBATION = 'base'
+    DATASET = 'SWET_0'
     print("Program initiating... \nType of segmentation: " + SEGMENTATION + "\nType of perturbation: " + PERTURBATION)
 
     DATA_DIR = cfg.paths.data_dir
     CLASSES = get_classes(SEGMENTATION)
     SEG_TYPE = CLASSES.index(SEGMENTATION)-1
 
-    score_dir = pathlib.Path(DATA_DIR, DATASET, 'score.csv')
+    score_dir = pathlib.Path(DATA_DIR, DATASET, 'metadata.csv')
     score_file = pd.read_csv(score_dir)
 
-    csv_dir = pathlib.Path(DATA_DIR, DATASET, f'score_{SEGMENTATION}_crop_{PERTURBATION}.csv')
+    csv_dir = pathlib.Path(DATA_DIR, DATASET, f'metadata_{SEGMENTATION}_man_crop_{PERTURBATION}.csv')
     csv_file = open(csv_dir, 'w', newline='')
     writer = csv.writer(csv_file)
-    writer.writerow(['refno', 'visno', 'cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed', 'filename', 'filepath'])
+    writer.writerow(['refno', 'visno', 'ethnic', 'cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed',
+                     'filename', 'filepath', 'task'])
 
     for mode in ['train','valid','test']:
 
@@ -125,6 +126,7 @@ def crop(cfg: DictConfig) -> Tuple[dict, dict]:
 
                     writer.writerow(
                         [score_file['refno'].get(index), score_file['visno'].get(index),
+                         score_file['ethnic'].get(index),
                          int(score_file['cra'].get(index)),
                          int(score_file['dry'].get(index)),
                          int(score_file['ery'].get(index)),
@@ -132,7 +134,8 @@ def crop(cfg: DictConfig) -> Tuple[dict, dict]:
                          int(score_file['exu'].get(index)),
                          int(score_file['lic'].get(index)),
                          int(score_file['oed'].get(index)),
-                         crop_file_name, crop_file_dir])
+                         crop_file_name, crop_file_dir, mode,
+                         ])
 
                     no += 1
                     print(f'{mode.upper()}: {batch_id}/{len(dataset)} {crop_file_name} created')

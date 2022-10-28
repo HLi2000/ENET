@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="lh@172.26.133.151:22 password (2)" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="lh@172.26.133.151:22 password" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
       <paths name="hl3719@login.hpc.imperial.ac.uk:22 password">
         <serverdata>
@@ -12,21 +12,21 @@
       <paths name="lh@172.26.133.151:22 password">
         <serverdata>
           <mappings>
+            <mapping deploy="/home/lh/projects/ENET" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="ylab5">
+        <serverdata>
+          <mappings>
             <mapping deploy="/projects/ENET" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
-      <paths name="lh@172.26.133.151:22 password (2)">
+      <paths name="ylab6">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/lh/projects/ENET" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="lh@172.26.191.118:22 password">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/home/lh/projects/ENET" local="$PROJECT_DIR$" />
+            <mapping deploy="/projects/ENET" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

@@ -1,0 +1,6 @@
+_target_: src.datamodules.roi_datamodule.ROIDataModule
+seg_type: ${seg_type}
+data_dir: ${paths.data_dir}${dataset}
+batch_size: 1
+num_workers: 0
+pin_memory: False

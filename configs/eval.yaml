@@ -9,8 +9,11 @@ defaults:
   - paths: default.yaml
   - extras: default.yaml
   - hydra: default.yaml
+  - experiment: eval_ROI_SWET0_skin_base.yaml
 
 task_name: "eval"
+
+data_dir: ${paths.data_dir}
 
 tags: ["dev"]
 

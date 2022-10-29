@@ -51,7 +51,7 @@ def crop(cfg: DictConfig) -> Tuple[dict, dict]:
     csv_file = open(csv_dir, 'w', newline='')
     writer = csv.writer(csv_file)
     writer.writerow(['refno', 'visno', 'ethnic', 'cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed',
-                     'filename', 'filepath', 'task'])
+                     'filename', 'crop', 'filepath', 'task'])
 
     for mode in ['train','valid','test']:
 
@@ -114,10 +114,10 @@ def crop(cfg: DictConfig) -> Tuple[dict, dict]:
                 print(x_name + " not found")
                 continue
 
+            img = np.moveaxis(re_normalize(x[0].numpy()), source=0, destination=-1)
             # save crops
             no = 0
             for i, box in enumerate(boxes_rot):
-                img = np.moveaxis(re_normalize(x[0].numpy()), source=0, destination=-1)
                 crops = crop_square(img, box, rects_rot[i])
                 for crop in crops:
                     crop_file_name = x_name.split(".")[0] + "_crop" + str(no) + ".jpg"
@@ -134,7 +134,7 @@ def crop(cfg: DictConfig) -> Tuple[dict, dict]:
                          int(score_file['exu'].get(index)),
                          int(score_file['lic'].get(index)),
                          int(score_file['oed'].get(index)),
-                         crop_file_name, crop_file_dir, mode,
+                         x_name, crop_file_name, crop_file_dir, mode,
                          ])
 
                     no += 1

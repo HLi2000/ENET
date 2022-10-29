@@ -176,8 +176,8 @@ class FasterRCNNModule(LightningModule):
         model: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
-        iou_threshold: float = 0.5,
         monitor: str = None,
+        auto_crop: bool = False,
     ):
         super().__init__()
 
@@ -189,9 +189,8 @@ class FasterRCNNModule(LightningModule):
         self.model = model
 
         # metric objects for calculating and averaging accuracy across batches
-        self.train_map = MeanAveragePrecision(iou_thresholds=[0.5, 0.75])
-        self.val_map = MeanAveragePrecision(iou_thresholds=[0.5, 0.75])
-        self.test_map = MeanAveragePrecision(iou_thresholds=[0.5, 0.75])
+        self.val_map = get_pascalvoc_metrics
+        self.test_map = MeanAveragePrecision()
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
@@ -239,11 +238,47 @@ class FasterRCNNModule(LightningModule):
         # Inference
         preds = self.model(x)
 
-        self.val_map.update(target=y, preds=preds)
-        metric = self.val_map.compute()
+        gt_boxes = [
+            from_dict_to_boundingbox(file=target, name=name, groundtruth=True)
+            for target, name in zip(y, x_name)
+        ]
+        gt_boxes = list(chain(*gt_boxes))
 
-        map = metric["map"]
+        pred_boxes = [
+            from_dict_to_boundingbox(file=pred, name=name, groundtruth=False)
+            for pred, name in zip(preds, x_name)
+        ]
+        pred_boxes = list(chain(*pred_boxes))
+
+        metric = self.val_map(
+            gt_boxes=gt_boxes,
+            det_boxes=pred_boxes,
+            iou_threshold=0.5,
+            method=MethodAveragePrecision.EVERY_POINT_INTERPOLATION,
+            generate_table=True,
+        )
+
+        map_50 = metric["m_ap"]
+
+        metric = self.val_map(
+            gt_boxes=gt_boxes,
+            det_boxes=pred_boxes,
+            iou_threshold=0.75,
+            method=MethodAveragePrecision.EVERY_POINT_INTERPOLATION,
+            generate_table=True,
+        )
+
+        map_75 = metric["m_ap"]
+        map = (map_50+map_75)/2
+
+        # self.val_map.update(target=y, preds=preds)
+        # metric = self.val_map.compute()
+        #
+        # map, map_50, map_75 = metric["map"], metric["map_50"], metric["map_75"]
+
         self.log("val/mAP", map, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/mAP_50", map_50, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/mAP_75", map_75, on_step=False, on_epoch=True, prog_bar=True)
 
         self.val_map_best(map)  # update best so far val acc
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
@@ -279,16 +314,16 @@ class FasterRCNNModule(LightningModule):
         # Inference
         preds = self.model(x)
 
-        self.val_map.update(target=y, preds=preds)
-        metric = self.val_map.compute()
+        if self.hparams.auto_crop:
+            map, map_50, map_75 = torch.tensor(-1), torch.tensor(-1), torch.tensor(-1)
+        else:
+            self.test_map.update(target=y, preds=preds)
+            metric = self.test_map.compute()
 
-        map = metric["map"]
-        self.log("val/mAP", map, on_step=False, on_epoch=True, prog_bar=True)
-
-        self.val_map_best(map)  # update best so far val acc
-        # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
-        # otherwise metric would be reset by lightning after each epoch
-        self.log("val/mAP_best", self.val_map_best.compute(), prog_bar=True)
+            map, map_50, map_75 = metric["map"], metric["map_50"], metric["map_75"]
+            self.log("test/mAP", map, on_step=False, on_epoch=True, prog_bar=True)
+            self.log("test/mAP_50", map_50, on_step=False, on_epoch=True, prog_bar=True)
+            self.log("test/mAP_75", map_75, on_step=False, on_epoch=True, prog_bar=True)
 
         sen, pre, acc, dice, iou = [], [], [], [], []
         for i in range(len(x)):
@@ -306,7 +341,11 @@ class FasterRCNNModule(LightningModule):
         self.log("test/dice", dice, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/iou", iou, on_step=False, on_epoch=True, prog_bar=True)
 
-        return {"pred_boxes": preds, "gt_boxes": y}
+        return {
+            "x_name": x_name[0], "x": x[0], "pred_boxes": preds[0],
+            "mAP": map.item(), "mAP_50": map_50.item(), "mAP_75": map_75.item(),
+            "sen": sen, "pre": pre, "acc": acc, "dice": dice, "iou": iou,
+        }
 
     def test_epoch_end(self, outputs: List[Any]):
         pass

@@ -13,7 +13,7 @@ from src.metrics.enumerators import BBFormat, BBType
 import matplotlib.path as pltPath
 from torch.utils.data.dataloader import default_collate
 
-def crop_square(image, box, rect):
+def crop_square(image, box, rect = None):
     """
     Crop squares but added exclusion rules to remove low quality crops, setting the limitation of side length
     (in pixel) to adjust crop qualities
@@ -27,9 +27,15 @@ def crop_square(image, box, rect):
         return a list contains all the cropped square crops, each crop is stored in a numpy array
 
     """
+    if len(box.shape) == 1:
+        width = int(box[2] - box[0])
+        height = int(box[3] - box[1])
+        x, y, x2, y2 = box
+        box = [[x2, y2], [x, y2], [x, y], [x2, y]]
+    else:
+        width = int(rect[1][0])
+        height = int(rect[1][1])
     box = np.array(box)
-    width = int(rect[1][0])
-    height = int(rect[1][1])
     src_pts = box.astype("float32")
 
     # coordinate of the points in box points after the rectangle has been straightened
@@ -264,12 +270,13 @@ def roi_metrics(img, gt_boxes, pr_boxes):
         return the metrics in the following order: recall, precision, f1, acc, dice_coef (which is the same as F1-score), [TP, TN, FP, FN]
 
     """
-    gt_boxes = np.stack([gt_boxes, gt_boxes], axis=-1)
-    pr_boxes = np.stack([pr_boxes, pr_boxes], axis=-1)
-    for boxes in [gt_boxes, pr_boxes]:
-        for i in range(len(boxes)):
-            x, y, x2, y2 = boxes[i, :, 0]
-            boxes[i] = [[x2, y2], [x, y2], [x, y], [x2, y]]
+    # if len(gt_boxes.shape) == 2:
+    #     gt_boxes = np.stack([gt_boxes, gt_boxes], axis=-1)
+    #     pr_boxes = np.stack([pr_boxes, pr_boxes], axis=-1)
+    #     for boxes in [gt_boxes, pr_boxes]:
+    #         for i in range(len(boxes)):
+    #             x, y, x2, y2 = boxes[i, :, 0]
+    #             boxes[i] = [[x2, y2], [x, y2], [x, y], [x2, y]]
 
     height = img.shape[0]
     width = img.shape[1]
@@ -286,7 +293,7 @@ def roi_metrics(img, gt_boxes, pr_boxes):
     pr_layer = np.zeros([height, width], dtype=np.uint8)
 
     gt_boxes = gt_boxes.astype(np.int32)
-    pr_boxes = pr_boxes.astype(np.int32)
+    pr_boxes = np.array(pr_boxes).astype(np.int32)
 
     if len(gt_boxes.shape) == 2:
         for box in gt_boxes:

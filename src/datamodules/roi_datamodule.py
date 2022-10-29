@@ -52,6 +52,7 @@ class ROIDataModule(LightningDataModule):
         batch_size: int = 1,
         num_workers: int = 0,
         pin_memory: bool = False,
+        auto_crop: bool = False,
     ):
         super().__init__()
 
@@ -149,12 +150,32 @@ class ROIDataModule(LightningDataModule):
 
         # Assign test dataset for use in dataloader(s)
         if stage == 'test' or stage is None:
-            inputs_test_dir = self.data_dir / 'test' / "reals"
-            targets_test_dir = self.data_dir / 'test' / f"boxes_{self.hparams.seg_type}"
-            inputs_test = get_filenames_of_path(inputs_test_dir)
-            targets_test = get_filenames_of_path(targets_test_dir)
-            inputs_test.sort()
-            targets_test.sort()
+            if self.hparams.auto_crop:
+                inputs_train_dir = self.data_dir / 'train' / "reals"
+                targets_train_dir = self.data_dir / 'train' / f"boxes_{self.hparams.seg_type}"
+                inputs_train = get_filenames_of_path(inputs_train_dir)
+                targets_train = get_filenames_of_path(targets_train_dir)
+                inputs_train.sort()
+                targets_train.sort()
+
+                inputs_val_dir = self.data_dir / 'valid' / "reals"
+                targets_val_dir = self.data_dir / 'valid' / f"boxes_{self.hparams.seg_type}"
+                inputs_val = get_filenames_of_path(inputs_val_dir)
+                targets_val = get_filenames_of_path(targets_val_dir)
+                inputs_val.sort()
+                targets_val.sort()
+
+                inputs_test = inputs_train + inputs_val
+                targets_test = targets_train + targets_val
+                inputs_test_dir = str(inputs_train_dir)+' and '+str(inputs_train_dir)
+                targets_test_dir = str(targets_val_dir)+' and '+str(targets_val_dir)
+            else:
+                inputs_test_dir = self.data_dir / 'test' / "reals"
+                targets_test_dir = self.data_dir / 'test' / f"boxes_{self.hparams.seg_type}"
+                inputs_test = get_filenames_of_path(inputs_test_dir)
+                targets_test = get_filenames_of_path(targets_test_dir)
+                inputs_test.sort()
+                targets_test.sort()
             if inputs_test:
                 log.info(f'{len(inputs_test)} images loaded from {inputs_test_dir}')
                 log.info(f'{len(targets_test)} boxes loaded from {targets_test_dir}')

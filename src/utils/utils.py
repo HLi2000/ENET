@@ -14,6 +14,16 @@ from src.utils import pylogger, rich_utils
 
 log = pylogger.get_pylogger(__name__)
 
+class TestStore(Callback):
+    def __init__(self):
+        self.test_outputs = []
+
+    def on_test_batch_end(self, trainer, pl_module, outputs, *args, **kwargs):
+        self.test_outputs.append(outputs)  # or extend
+
+    def get_test_outputs(self):
+        return self.test_outputs
+
 def get_classes(seg):
     if seg.lower() == 'skin':
         return ['background', 'skin']

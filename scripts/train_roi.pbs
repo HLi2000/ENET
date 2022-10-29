@@ -1,9 +1,9 @@
 #PBS -l walltime=72:00:00
-#PBS -l select=1:ncpus=8:mem=24gb:ngpus=1:gpu_type=RTX6000
+#PBS -l select=1:ncpus=24:mem=24gb:ngpus=1:gpu_type=RTX6000
 
 nvidia-smi
 module load anaconda3/personal
 source activate ENV
 cd $PBS_O_WORKDIR
 
-python src/train_roi.py logger=wandb experiment=roi_SWET_skin_base.yaml
+python src/train_roi.py logger=wandb experiment=train_ROI_SWET_skin_base.yaml

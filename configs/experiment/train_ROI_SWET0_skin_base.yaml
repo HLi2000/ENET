@@ -53,8 +53,8 @@ model:
     fpn: True
     min_size: 600
     max_size: 1024
-  iou_threshold: 0.5
   monitor: "val/mAP"
+  auto_crop: False
 
 callbacks:
   model_checkpoint:

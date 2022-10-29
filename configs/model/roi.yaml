@@ -24,6 +24,6 @@ model:
   min_size: 600
   max_size: 1024
 
-iou_threshold: 0.5
-
 monitor: "val/loss"
+
+auto_crop: False

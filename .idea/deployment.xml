@@ -1,18 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="lh@172.26.133.151:22 password" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="YLAB6" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
+      <paths name="YLAB5">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/lh/projects/ENET" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="YLAB6">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/lh/projects/ENET" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="hl3719@login.hpc.imperial.ac.uk:22 password">
         <serverdata>
           <mappings>
             <mapping deploy="/projects/ENET" local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="lh@172.26.133.151:22 password">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/home/lh/projects/ENET" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>

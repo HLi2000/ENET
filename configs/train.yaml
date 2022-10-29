@@ -15,8 +15,8 @@ defaults:
 
   # experiment configs allow for version control of specific hyperparameters
   # e.g. best hyperparameters for given model and datamodule
-#  - experiment: roi_SWET_skin_base.yaml
-  - experiment: null
+  - experiment: train_ROI_SWET0_skin_base.yaml
+#  - experiment: null
 
   # config for hyperparameter optimization
   - hparams_search: null

@@ -1,0 +1,75 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /datamodule: roi.yaml
+  - override /model: roi.yaml
+  - override /callbacks: default.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+task_name: "train_ROI_TLA_skin_base"
+
+seg_type: "skin"
+
+perturbation: "base"
+
+dataset: "TLA"
+
+tags: ["ROI", "skin", "base", "TLA", "faster_RCNN"]
+
+seed: 37
+
+trainer:
+  accelerator: gpu
+  devices: 1
+  min_epochs: 50
+  max_epochs: 100
+  gradient_clip_val: 0.5
+
+datamodule:
+  batch_size: 1
+
+model:
+  optimizer:
+    lr: 0.0003
+    momentum: 0.9
+    weight_decay: 0.005
+  scheduler:
+    _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+    mode: max
+    factor: 0.75
+    patience: 10
+  model:
+    _target_: src.models.roi_module.get_faster_rcnn_resnet
+    num_classes: 2
+    backbone_name: "resnet50"
+    anchor_size: ((32,), (64,), (128,), (512,))
+    aspect_ratios: ((0.5, 1.0, 2.0),)
+    fpn: True
+    min_size: 600
+    max_size: 1024
+  monitor: "val/mAP"
+  auto_crop: False
+
+callbacks:
+  model_checkpoint:
+    monitor: "val/mAP"
+    mode: "max"
+    save_last: True
+    auto_insert_metric_name: False
+  early_stopping:
+    monitor: "val/mAP"
+    patience: 50
+    mode: "max"
+
+logger:
+  wandb:
+    tags: ${tags}
+    project: "ENET_ROI"
+    group: ${task_name}
+    id: null # pass correct id to resume experiment!

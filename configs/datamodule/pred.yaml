@@ -1,0 +1,9 @@
+_target_: src.datamodules.pred_datamodule.PredDataModule
+data_dir: ${paths.data_dir}${dataset}
+batch_size: 32
+num_workers: 0
+pin_memory: False
+crop: ${crop}
+perturbation: ${perturbation}
+ordinal: ${ordinal}
+class_weighted: ${class_weighted}

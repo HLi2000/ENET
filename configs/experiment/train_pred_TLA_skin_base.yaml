@@ -1,0 +1,76 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /datamodule: pred.yaml
+  - override /model: pred.yaml
+  - override /callbacks: default.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+task_name: "train_pred_TLA_skin_base"
+
+crop: True
+
+ordinal: True
+
+class_weighted: True
+
+seg_type: "skin"
+
+perturbation: "base"
+
+dataset: "TLA"
+
+tags: ["pred", "skin", "base", "TLA", "EczemaNet", 'crop']
+
+seed: 37
+
+trainer:
+  accelerator: gpu
+  devices: 1
+  min_epochs: 50
+  max_epochs: 100
+  gradient_clip_val: 0.5
+
+datamodule:
+  batch_size: 32
+
+model:
+  optimizer:
+    lr: 0.0001
+    momentum: 0.9
+    weight_decay: 0.005
+  scheduler:
+    _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+    mode: min
+    factor: 0.75
+    patience: 10
+  model:
+    _target_: src.models.components.eczemanet.EczemaNet
+    num_classes: 4
+    dropout: 0.5
+  monitor: "val/MSE"
+  n_classes: 4
+
+callbacks:
+  model_checkpoint:
+    monitor: "val/MSE"
+    mode: "min"
+    save_last: True
+    auto_insert_metric_name: False
+  early_stopping:
+    monitor: "val/MSE"
+    patience: 50
+    mode: "min"
+
+logger:
+  wandb:
+    tags: ${tags}
+    project: "ENET_pred"
+    group: ${task_name}
+    id: null # pass correct id to resume experiment!

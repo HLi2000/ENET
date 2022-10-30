@@ -1,0 +1,47 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /datamodule: pred.yaml
+  - override /model: pred.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+task_name: "eval_pred_SWET0_skin_base"
+
+crop: True
+
+ordinal: True
+
+class_weighted: True
+
+seg_type: "skin"
+
+perturbation: "base"
+
+dataset: "SWET_0"
+
+tags: ["pred", "skin", "base", "SWET_0", "faster_RCNN", 'crop']
+
+seed: 37
+
+#ckpt_path: /home/lh/projects/ENET/logs/train_ROI_SWET0_skin_base/runs/2022-10-28_22-42-51/checkpoints/epoch_009.ckpt
+ckpt_path: /home/lh/projects/ENET/logs/train_pred_SWET0_skin_base/last.ckpt
+
+trainer:
+  accelerator: gpu
+  devices: 1
+
+datamodule:
+  batch_size: 1
+
+model:
+  model:
+    _target_: src.models.components.eczemanet.EczemaNet
+    num_classes: 4
+    dropout: 0.5
+  n_classes: 4

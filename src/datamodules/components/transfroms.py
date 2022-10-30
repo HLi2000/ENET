@@ -167,7 +167,7 @@ class ComposeSingle(Compose):
         return inp
 
 
-class AlbumentationWrapper(Repr):
+class ROIAlbumentationWrapper(Repr):
     """
     A wrapper for the albumentation package.
     Bounding boxes are expected to be in xyxy format (pascal_voc).
@@ -210,3 +210,26 @@ class Clip(Repr):
         tar["boxes"] = new_boxes
 
         return inp, tar
+
+class PredAlbumentationWrapper(Repr):
+    """
+    A wrapper for the albumentation package.
+    Bounding boxes are expected to be in xyxy format (pascal_voc).
+    Bounding boxes cannot be larger than the spatial image's dimensions.
+    Use Clip() if your bounding boxes are outside of the image, before using this wrapper.
+    """
+
+    def __init__(self, albumentations: List):
+        self.albumentations = albumentations
+
+    def __call__(self, inp: np.ndarray, tar: dict):
+        # input, target
+        transform = A.Compose(
+            self.albumentations,
+        )
+
+        out_dict = transform(image=inp)
+
+        input_out = out_dict["image"]
+
+        return input_out, tar

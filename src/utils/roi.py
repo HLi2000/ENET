@@ -27,6 +27,7 @@ def crop_square(image, box, rect = None):
         return a list contains all the cropped square crops, each crop is stored in a numpy array
 
     """
+    box = np.array(box)
     if len(box.shape) == 1:
         width = int(box[2] - box[0])
         height = int(box[3] - box[1])

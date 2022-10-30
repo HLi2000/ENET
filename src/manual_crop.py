@@ -75,8 +75,8 @@ def crop(cfg: DictConfig) -> Tuple[dict, dict]:
         crop_dir.mkdir(parents=True, exist_ok=True)
 
         transforms = ComposeDouble([
-            # AlbumentationWrapper(albumentation=A.HorizontalFlip(p=0.5)),
-            # AlbumentationWrapper(albumentation=A.RandomScale(p=0.5, scale_limit=0.5)),
+            # ROIAlbumentationWrapper(albumentation=A.HorizontalFlip(p=0.5)),
+            # ROIAlbumentationWrapper(albumentation=A.RandomScale(p=0.5, scale_limit=0.5)),
             # AlbuWrapper(albu=A.VerticalFlip(p=0.5)),
             FunctionWrapperDouble(np.moveaxis, source=-1, destination=0),
             FunctionWrapperDouble(normalize_01)

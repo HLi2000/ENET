@@ -7,7 +7,7 @@ import albumentations as A
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
 
-from src.datamodules.components.transfroms import ComposeDouble, Clip, AlbumentationWrapper, FunctionWrapperDouble, \
+from src.datamodules.components.transfroms import ComposeDouble, Clip, ROIAlbumentationWrapper, FunctionWrapperDouble, \
     normalize_01
 from src.datamodules.datasets.roi_dataset import ROIDataSet
 from src.utils.roi import collate_double
@@ -64,9 +64,9 @@ class ROIDataModule(LightningDataModule):
         # %% transformations and augmentations
         self.transforms_train = ComposeDouble([
             Clip(),
-            # AlbumentationWrapper(albumentation=A.HorizontalFlip(p=0.5)),
-            # AlbumentationWrapper(albumentation=A.RandomScale(p=0.5, scale_limit=0.5)),
-            # AlbumentationWrapper(albumentation=A.VerticalFlip(p=0.5)),
+            # ROIAlbumentationWrapper(albumentation=A.HorizontalFlip(p=0.5)),
+            # ROIAlbumentationWrapper(albumentation=A.RandomScale(p=0.5, scale_limit=0.5)),
+            # ROIAlbumentationWrapper(albumentation=A.VerticalFlip(p=0.5)),
             FunctionWrapperDouble(np.moveaxis, source=-1, destination=0),
             FunctionWrapperDouble(normalize_01)
         ])
@@ -94,7 +94,7 @@ class ROIDataModule(LightningDataModule):
 
     @property
     def num_classes(self):
-        return 10
+        return 2
 
     def prepare_data(self):
         """Download data if needed.
@@ -211,7 +211,7 @@ class ROIDataModule(LightningDataModule):
     def test_dataloader(self):
         return DataLoader(
             dataset=self.dataset_test,
-            batch_size=self.hparams.batch_size,
+            batch_size=1,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,

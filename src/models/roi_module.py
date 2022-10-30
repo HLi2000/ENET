@@ -342,7 +342,7 @@ class FasterRCNNModule(LightningModule):
         self.log("test/iou", iou, on_step=False, on_epoch=True, prog_bar=True)
 
         return {
-            "x_name": x_name[0], "x": x[0], "pred_boxes": preds[0],
+            "x_name": x_name[0], "x": x[0].cpu().numpy(), "pred_boxes": preds[0],
             "mAP": map.item(), "mAP_50": map_50.item(), "mAP_75": map_75.item(),
             "sen": sen, "pre": pre, "acc": acc, "dice": dice, "iou": iou,
         }

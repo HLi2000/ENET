@@ -14,7 +14,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from src.datamodules.components.transfroms import re_normalize
-from src.utils.roi import crop_square
+from src.utils.roi import crop_square, crop_rect
 from src.utils.utils import TestStore
 
 from typing import List, Tuple
@@ -157,7 +157,8 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
             for id, box in enumerate(boxes['boxes']):
                 if boxes['scores'][id] < 0.75:
                     continue
-                crops = crop_square(img, box.cpu().numpy())
+                # crops = crop_square(img, box.cpu().numpy())
+                crops = [crop_rect(img, box.cpu().numpy())]
                 for crop in crops:
                     crop_file_name = x_name.split(".")[0] + "_crop" + str(no) + ".jpg"
                     crop_file_dir = pathlib.Path(crop_dir, crop_file_name)

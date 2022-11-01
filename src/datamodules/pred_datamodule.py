@@ -124,6 +124,7 @@ class PredDataModule(LightningDataModule):
                     weights = [sum(weights[1:]), sum(weights[2:]), weights[3]]
                 weights = min(weights) / np.array(weights)
                 weights_test.append(weights)
+            # weights_test = min(weights_test) / np.array(weights_test)
             return torch.tensor(weights_test).type(torch.float32)
         return None
 
@@ -152,9 +153,10 @@ class PredDataModule(LightningDataModule):
                 man_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_man_crop_{self.hparams.perturbation}.csv"
                 man_csv = pd.read_csv(man_csv_dir)
 
-                csv = pd.concat([auto_csv, man_csv])
-                csv_train = csv[csv['task'] == 'train']
-                csv_val = csv[csv['task'] == 'valid']
+                # csv = pd.concat([auto_csv, man_csv])
+                csv = man_csv
+                csv_train = csv[csv['task'] == 'train'][:10]
+                csv_val = csv[csv['task'] == 'valid'][:10]
 
                 inputs_train = [filepath for filepath in csv_train['filepath']]
                 targets_train = csv_train[['cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed']].to_dict('records')
@@ -181,14 +183,16 @@ class PredDataModule(LightningDataModule):
         # Assign test dataset for use in dataloader(s)
         if stage == 'test' or stage is None:
             if self.hparams.crop:
-                auto_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_pred_{self.hparams.perturbation}.csv"
+                # auto_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_pred_{self.hparams.perturbation}.csv"
+                auto_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_man_crop_{self.hparams.perturbation}.csv"
                 auto_csv = pd.read_csv(auto_csv_dir)
                 # man_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_man_crop_{self.hparams.perturbation}.csv"
                 # man_csv = pd.read_csv(man_csv_dir)
 
                 # csv = pd.concat([auto_csv, man_csv])
                 csv = auto_csv
-                csv_test = csv[csv['task'] == 'test']
+                # csv_test = csv[csv['task'] == 'test']
+                csv_test = csv[csv['task'] == 'train'][:10]
 
                 inputs_test = [filepath for filepath in csv_test['filepath']]
                 targets_test = csv_test[['cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed']].to_dict('records')

@@ -33,12 +33,12 @@ seed: 37
 trainer:
   accelerator: gpu
   devices: 1
-  min_epochs: 1
-  max_epochs: 1
+  min_epochs: 10
+  max_epochs: 100
   gradient_clip_val: 0.5
 
 datamodule:
-  batch_size: 64
+  batch_size: 1
 
 model:
   optimizer:
@@ -48,16 +48,14 @@ model:
   scheduler:
     _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
     mode: min
-    factor: 0.75
-    patience: 10
+    factor: 0.3
+    patience: 5
   model:
     _target_: src.models.components.eczemanet.EczemaNet
     num_classes: 4
     dropout: 0.5
   monitor: "val/MSE"
-  ordinal: ${ordinal}
   n_classes: 4
-  crop: ${crop}
 
 callbacks:
   model_checkpoint:
@@ -67,7 +65,7 @@ callbacks:
     auto_insert_metric_name: False
   early_stopping:
     monitor: "val/MSE"
-    patience: 50
+    patience: 20
     mode: "min"
 
 logger:
@@ -76,3 +74,5 @@ logger:
     project: "ENET_pred"
     group: ${task_name}
     id: null # pass correct id to resume experiment!
+#    notes: train only on man crops
+

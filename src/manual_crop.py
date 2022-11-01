@@ -35,9 +35,9 @@ from src import utils
 log = utils.get_pylogger(__name__)
 
 def crop(cfg: DictConfig) -> Tuple[dict, dict]:
-    SEGMENTATION = 'skin'
+    SEGMENTATION = 'ad'
     PERTURBATION = 'base'
-    DATASET = 'SWET_0'
+    DATASET = 'SWET'
     print("Program initiating... \nType of segmentation: " + SEGMENTATION + "\nType of perturbation: " + PERTURBATION)
 
     DATA_DIR = cfg.paths.data_dir
@@ -66,8 +66,8 @@ def crop(cfg: DictConfig) -> Tuple[dict, dict]:
         print('Reading masks from: ' + str(target_dir))
 
         # # debug
-        # inputs = inputs[233:]
-        # targets = targets[233:]
+        # inputs = inputs[537:]
+        # targets = targets[537:]
 
         box_dir = pathlib.Path(DATA_DIR, DATASET, mode, f"boxes_{SEGMENTATION}")
         box_dir.mkdir(parents=True, exist_ok=True)
@@ -94,6 +94,7 @@ def crop(cfg: DictConfig) -> Tuple[dict, dict]:
                                 shuffle=False)
 
         for batch_id, [x, y, x_name, y_name] in enumerate(dataloader):
+
             x_name = x_name[0]
 
             # get boxes
@@ -101,12 +102,16 @@ def crop(cfg: DictConfig) -> Tuple[dict, dict]:
             box_img_rot, boxes_rot, rects_rot = draw_box_countours(y[0, SEG_TYPE].numpy(), rotated=True)
 
             # save boxes
+            if len(boxes) == 0:
+                print(f'{mode.upper()}: {batch_id}/{len(dataset)} {json_filename} is empty!!!!!')
+                boxes.append([0,0,1,1])
             labels = [CLASSES[-1]]*len(boxes)
             json_file = {"labels": labels, "boxes": boxes}
             json_filename = x_name.split(".")[0] + ".json"
             save_json(json_file, path=pathlib.Path(box_dir, json_filename))
 
             print(f'{mode.upper()}: {batch_id}/{len(dataset)} {json_filename} created')
+
 
             try:
                 index = pd.Index(score_file['filename']).get_loc(x_name)

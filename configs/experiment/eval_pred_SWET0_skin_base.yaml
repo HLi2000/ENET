@@ -30,6 +30,7 @@ tags: ["pred", "skin", "base", "SWET_0", "faster_RCNN", 'crop']
 seed: 37
 
 #ckpt_path: /home/lh/projects/ENET/logs/train_ROI_SWET0_skin_base/runs/2022-10-28_22-42-51/checkpoints/epoch_009.ckpt
+#ckpt_path: /home/lh/projects/ENET/logs/train_pred_SWET0_skin_base/epoch_007.ckpt
 ckpt_path: /home/lh/projects/ENET/logs/train_pred_SWET0_skin_base/last.ckpt
 
 trainer:

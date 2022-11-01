@@ -40,16 +40,18 @@ class EczemaNet(torch.nn.Module):
         self.branch5 = Branch(1280, num_classes, dropout)
         self.branch6 = Branch(1280, num_classes, dropout)
 
+        self.activation = torch.nn.Sigmoid()
+
     def forward(self, x):
         x = self.base.features(x)
         # Cannot use "squeeze" as batch-size can be 1
         x = torch.nn.functional.adaptive_avg_pool2d(x, (1, 1))
         x = torch.flatten(x, 1)
-        x0 = self.branch0(x)
-        x1 = self.branch1(x)
-        x2 = self.branch2(x)
-        x3 = self.branch3(x)
-        x4 = self.branch4(x)
-        x5 = self.branch5(x)
-        x6 = self.branch6(x)
+        x0 = self.activation(self.branch0(x))
+        x1 = self.activation(self.branch1(x))
+        x2 = self.activation(self.branch2(x))
+        x3 = self.activation(self.branch3(x))
+        x4 = self.activation(self.branch4(x))
+        x5 = self.activation(self.branch5(x))
+        x6 = self.activation(self.branch6(x))
         return torch.stack([x0, x1, x2, x3, x4, x5, x6], axis=1)

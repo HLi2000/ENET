@@ -22,7 +22,7 @@ import pytorch_lightning as pl
 from omegaconf import DictConfig
 from pytorch_lightning import Callback, LightningDataModule, LightningModule, Trainer
 from pytorch_lightning.loggers import LightningLoggerBase
-from torchmetrics.functional import mean_absolute_error, mean_squared_error
+from torchmetrics.functional import mean_absolute_error, mean_squared_error, r2_score
 
 from src import utils
 
@@ -91,6 +91,8 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
             target = outs['target'].get(0)
             preds = torch.stack([pred for pred in outs["prob_cat"]]).type(torch.float32)
             preds = torch.mean(preds, axis=0)
+            for i, pred in enumerate(preds):
+                preds[i] = pred/torch.sum(pred)
 
             SASSAD = target['cra'] + target['dry'] + target['ery'] + \
                      target['exc'] + target['exu'] + target['lic']
@@ -104,23 +106,23 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
             EASI_pred_pmf = convolve_many([preds[2], preds[3], preds[5], preds[6]])
             EASI_pred = torch.sum(EASI_pred_pmf * torch.arange(len(EASI_pred_pmf)))
 
-            SASSAD_mae = mean_absolute_error(SASSAD_pred, SASSAD)
-            SASSAD_mse = mean_squared_error(SASSAD_pred, SASSAD)
-            SASSAD_rmse = torch.sqrt(SASSAD_mse)
-            TISS_mae = mean_absolute_error(TISS_pred, TISS)
-            TISS_mse = mean_squared_error(TISS_pred, TISS)
-            TISS_rmse = torch.sqrt(TISS_mse)
-            EASI_mae = mean_absolute_error(EASI_pred, EASI)
-            EASI_mse = mean_squared_error(EASI_pred, EASI)
-            EASI_rmse = torch.sqrt(EASI_mse)
+            SASSAD_ae = mean_absolute_error(SASSAD_pred, SASSAD)
+            SASSAD_se = mean_squared_error(SASSAD_pred, SASSAD)
+            # SASSAD_rmse = torch.sqrt(SASSAD_mse)
+            TISS_ae = mean_absolute_error(TISS_pred, TISS)
+            TISS_se = mean_squared_error(TISS_pred, TISS)
+            # TISS_rmse = torch.sqrt(TISS_mse)
+            EASI_ae = mean_absolute_error(EASI_pred, EASI)
+            EASI_se = mean_squared_error(EASI_pred, EASI)
+            # EASI_rmse = torch.sqrt(EASI_mse)
 
             res.append({'filepath': x_path,
                         'SASSAD': SASSAD.item(), 'SASSAD_pred': SASSAD_pred.item(),
                         'TISS': TISS.item(), 'TISS_pred': TISS_pred.item(),
                         'EASI': EASI.item(), 'EASI_pred': EASI_pred.item(),
-                        'SASSAD_mae': SASSAD_mae.item(), 'SASSAD_mse': SASSAD_mse.item(), 'SASSAD_rmse': SASSAD_rmse.item(),
-                        'TISS_mae': TISS_mae.item(), 'TISS_mse': TISS_mse.item(), 'TISS_rmse': TISS_rmse.item(),
-                        'EASI_mae': EASI_mae.item(), 'EASI_mse': EASI_mse.item(), 'EASI_rmse': EASI_rmse.item(),
+                        'SASSAD_ae': SASSAD_ae.item(), 'SASSAD_se': SASSAD_se.item(),
+                        'TISS_ae': TISS_ae.item(), 'TISS_se': TISS_se.item(),
+                        'EASI_ae': EASI_ae.item(), 'EASI_se': EASI_se.item(),
                         })
 
     res_pd = pd.DataFrame.from_records(res, index='filepath')

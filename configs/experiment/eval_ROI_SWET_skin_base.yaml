@@ -11,7 +11,7 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-task_name: "eval_ROI_SWET0_skin_base"
+task_name: "eval_ROI_SWET_skin_base"
 
 auto_crop: True
 

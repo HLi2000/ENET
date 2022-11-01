@@ -42,8 +42,8 @@ model:
   scheduler:
     _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
     mode: max
-    factor: 0.75
-    patience: 10
+    factor: 0.3
+    patience: 5
   model:
     _target_: src.models.roi_module.get_faster_rcnn_resnet
     num_classes: 2
@@ -64,7 +64,7 @@ callbacks:
     auto_insert_metric_name: False
   early_stopping:
     monitor: "val/mAP"
-    patience: 50
+    patience: 20
     mode: "max"
 
 logger:

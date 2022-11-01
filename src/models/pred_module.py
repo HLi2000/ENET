@@ -4,7 +4,7 @@ from typing import Any, List
 import pandas as pd
 import torch
 from pytorch_lightning import LightningModule
-from torchmetrics import MinMetric, MeanMetric, MeanAbsoluteError, MeanSquaredError
+from torchmetrics import MinMetric, MeanMetric, MeanAbsoluteError, MeanSquaredError, R2Score, MaxMetric
 from torchmetrics.functional import mean_absolute_error, mean_squared_error
 
 from src.utils.pred import ordinariser, ordinariser_reversed, proba_ordinal_to_categorical, convolve_many
@@ -44,7 +44,13 @@ class PredModule(LightningModule):
 
         self.model = model
 
-        # loss function
+        # loss functions
+        self.criterion = []
+        # for i in range(7):
+        #     if class_weights is not None:
+        #         self.criterion.append(torch.nn.BCELoss(weight=class_weights[i]))
+        #     else:
+        #         self.criterion.append(torch.nn.BCELoss())
         if class_weights is not None:
             self.criterion = torch.nn.BCELoss(weight=class_weights)
         else:
@@ -60,14 +66,19 @@ class PredModule(LightningModule):
         self.val_mse = MeanSquaredError()
         self.test_mse = MeanSquaredError()
 
+        self.train_r2 = R2Score()
+        self.val_r2 = R2Score()
+        self.test_r2 = R2Score()
+
         # for averaging loss across batches
         self.train_loss = MeanMetric()
         self.val_loss = MeanMetric()
         self.test_loss = MeanMetric()
 
         # for tracking best so far validation accuracy
-        self.val_mae_best = MinMetric()
+        # self.val_mae_best = MinMetric()
         self.val_mse_best = MinMetric()
+        self.val_r2_best = MaxMetric()
 
     def forward(self, x: torch.Tensor):
         return self.model(x)
@@ -75,13 +86,15 @@ class PredModule(LightningModule):
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
         # so we need to make sure val_acc_best doesn't store accuracy from these checks
-        self.val_mae_best.reset()
+        # self.val_mae_best.reset()
         self.val_mse_best.reset()
+        self.val_r2_best.reset()
 
     def step(self, batch: Any):
         x, y_batch, x_path, _ = batch
-        outputs = self.forward(x)
-        logits = self.activation(outputs)
+        # outputs = self.forward(x)
+        # logits = self.activation(outputs)
+        logits = self.forward(x)
         if self.hparams.ordinal:
             y_ordinal = []
             targets = []
@@ -113,9 +126,11 @@ class PredModule(LightningModule):
         self.train_loss(loss)
         self.train_mae(preds, targets)
         self.train_mse(preds, targets)
+        self.train_r2(preds.squeeze(), targets.squeeze())
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/MAE", self.train_mae, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/MSE", self.train_mse, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/R2", self.train_r2, on_step=False, on_epoch=True, prog_bar=True)
 
         # we can return here dict with any tensors
         # and then read it in some callback or in `training_epoch_end()` below
@@ -133,21 +148,26 @@ class PredModule(LightningModule):
         self.val_loss(loss)
         self.val_mae(preds, targets)
         self.val_mse(preds, targets)
+        self.val_r2(preds.squeeze(), targets.squeeze())
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/MAE", self.val_mae, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/MSE", self.val_mse, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/R2", self.val_r2, on_step=False, on_epoch=True, prog_bar=True)
 
         return {"loss": loss, "preds": preds, "targets": targets}
 
     def validation_epoch_end(self, outputs: List[Any]):
-        mae = self.val_mae.compute()  # get current val acc
-        self.val_mae_best(mae)  # update best so far val acc
+        # mae = self.val_mae.compute()  # get current val acc
+        # self.val_mae_best(mae)  # update best so far val acc
         mse = self.val_mse.compute()  # get current val acc
         self.val_mse_best(mse)  # update best so far val acc
+        r2 = self.val_r2.compute()
+        self.val_r2_best(r2)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
-        self.log("val/MAE_best", self.val_mae_best.compute(), prog_bar=True)
+        # self.log("val/MAE_best", self.val_mae_best.compute(), prog_bar=True)
         self.log("val/MSE_best", self.val_mse_best.compute(), prog_bar=True)
+        self.log("val/R2_best", self.val_r2_best.compute(), prog_bar=True)
 
     def test_step(self, batch: Any, batch_idx: int):
         _, y, x_path, _ = batch
@@ -157,9 +177,11 @@ class PredModule(LightningModule):
         self.test_loss(loss)
         self.test_mae(preds, targets)
         self.test_mse(preds, targets)
+        self.test_r2(preds.squeeze(), targets.squeeze())
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/MAE", self.test_mae, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/MSE", self.test_mse, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/R2", self.test_r2, on_step=False, on_epoch=True, prog_bar=True)
 
         filename = pathlib.Path(x_path[0]).name
         filename = "_".join(filename.split('_')[:-1])

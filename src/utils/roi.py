@@ -13,6 +13,51 @@ from src.metrics.enumerators import BBFormat, BBType
 import matplotlib.path as pltPath
 from torch.utils.data.dataloader import default_collate
 
+def crop_rect(image, box, rect = None):
+    """
+    Crop squares but added exclusion rules to remove low quality crops, setting the limitation of side length
+    (in pixel) to adjust crop qualities
+
+    # Arguments
+        image: image read by OpenCV library
+        box: box points returned from border following (returned by cv2.boxPoints(rect))
+        rect: min area rectangular returned from border following (returned by cv2.minAreaRect())
+
+    # Returns
+        return a list contains all the cropped square crops, each crop is stored in a numpy array
+
+    """
+    box = np.array(box)
+    if len(box.shape) == 1:
+        x, y, x2, y2 = box
+        warped = image[int(x):int(x2), int(y):int(y2)]
+        warped = np.ascontiguousarray(warped, dtype=np.uint8)
+    else:
+        width = int(rect[1][0])
+        height = int(rect[1][1])
+
+        box = np.array(box)
+        src_pts = box.astype("float32")
+
+        # coordinate of the points in box points after the rectangle has been straightened
+        dst_pts = np.array([[0, height-1],
+                            [0, 0],
+                            [width-1, 0],
+                            [width-1, height-1]], dtype="float32")
+
+        # the perspective transformation matrix
+        M = cv2.getPerspectiveTransform(src_pts, dst_pts)
+        # directly warp the rotated rectangle to get the straightened rectangle
+        warped = cv2.warpPerspective(image, M, (width, height))
+
+
+    # visualisation for debugging
+    # plt.figure(dpi=200)
+    # plt.imshow(warped)
+    # plt.show()
+
+    return warped
+
 def crop_square(image, box, rect = None):
     """
     Crop squares but added exclusion rules to remove low quality crops, setting the limitation of side length
@@ -29,26 +74,29 @@ def crop_square(image, box, rect = None):
     """
     box = np.array(box)
     if len(box.shape) == 1:
-        width = int(box[2] - box[0])
-        height = int(box[3] - box[1])
         x, y, x2, y2 = box
-        box = [[x2, y2], [x, y2], [x, y], [x2, y]]
+        warped = image[int(x):int(x2), int(y):int(y2)]
+        warped = np.ascontiguousarray(warped, dtype=np.uint8)
+        width = warped.shape[1]
+        height = warped.shape[0]
     else:
         width = int(rect[1][0])
         height = int(rect[1][1])
-    box = np.array(box)
-    src_pts = box.astype("float32")
 
-    # coordinate of the points in box points after the rectangle has been straightened
-    dst_pts = np.array([[0, height-1],
-                        [0, 0],
-                        [width-1, 0],
-                        [width-1, height-1]], dtype="float32")
+        box = np.array(box)
+        src_pts = box.astype("float32")
 
-    # the perspective transformation matrix
-    M = cv2.getPerspectiveTransform(src_pts, dst_pts)
-    # directly warp the rotated rectangle to get the straightened rectangle
-    warped = cv2.warpPerspective(image, M, (width, height))
+        # coordinate of the points in box points after the rectangle has been straightened
+        dst_pts = np.array([[0, height-1],
+                            [0, 0],
+                            [width-1, 0],
+                            [width-1, height-1]], dtype="float32")
+
+        # the perspective transformation matrix
+        M = cv2.getPerspectiveTransform(src_pts, dst_pts)
+        # directly warp the rotated rectangle to get the straightened rectangle
+        warped = cv2.warpPerspective(image, M, (width, height))
+
     crop_list = []
 
     x0 = 0
@@ -64,7 +112,7 @@ def crop_square(image, box, rect = None):
             while x1 <= width - 1:
                 crop_list.append(warped[y0:y1, x0:x1])
                 # visualisation for debugging
-                # cv2.rectangle(warped, (x0, y0), (x1, y1), (0, 255, 0), 2)
+                # cv2.rectangle(warped, (x0, y0), (x1, y1), (0, 255, 0), 20)
                 if x1 == width - 1:
                     break
                 x1 = x1 + L if x1 + L < width else (width - 1 if width - x1 >= L * len_threshold else width)
@@ -77,7 +125,7 @@ def crop_square(image, box, rect = None):
             while y1 <= height - 1:
                 crop_list.append(warped[y0:y1, x0:x1])
                 # visualisation for debugging
-                # cv2.rectangle(warped, (x0, y0), (x1, y1), (0, 255, 0), 2)
+                # cv2.rectangle(warped, (x0, y0), (x1, y1), (0, 255, 0), 20)
                 if y1 == height - 1:
                     break
                 y1 = y1 + L if y1 + L < height else (height - 1 if height - y1 >= L * len_threshold else height)
@@ -85,8 +133,10 @@ def crop_square(image, box, rect = None):
     # visualisation for debugging
     # plt.figure(dpi=200)
     # plt.imshow(warped)
+    # plt.show()
 
     return crop_list
+
 
 def draw_box_countours(mask, rotated=True):
     """
@@ -106,7 +156,7 @@ def draw_box_countours(mask, rotated=True):
             box = np.int0(box)
             area = cv2.contourArea(cntr)
             # Abandon boxes with too small area
-            if (area > 10000.0):
+            if (area > 1000.0):
                 boxes.append(box.tolist())
                 rects.append(rect)
                 cv2.drawContours(mask_img, [box], 0, (0, 0, 255), 10)
@@ -114,7 +164,7 @@ def draw_box_countours(mask, rotated=True):
             x, y, w, h = cv2.boundingRect(cntr)
             box = np.array([x, y, x+w, y+h])
             area = cv2.contourArea(cntr)
-            if (area > 10000.0):
+            if (area > 1000.0):
                 boxes.append(box.tolist())
                 cv2.rectangle(mask_img, (x, y), (x+w, y+h), (0, 255, 0), 10)
 

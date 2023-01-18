@@ -31,14 +31,16 @@ from src.datamodules.datasets.seg_dataset import SegDataSet
 from src.utils.roi import draw_box_countours, save_json, crop_square
 from src.utils.utils import get_classes, get_filenames_of_path
 from src import utils
+from src.utils.seg import collate_double_seg
 
 log = utils.get_pylogger(__name__)
 
 def crop(cfg: DictConfig) -> Tuple[dict, dict]:
-    SEGMENTATION = 'ad'
+    SEGMENTATION = 'skin'
     PERTURBATION = 'base'
-    DATASET = 'SWET'
-    print("Program initiating... \nType of segmentation: " + SEGMENTATION + "\nType of perturbation: " + PERTURBATION)
+    DATASET = 'TLA'
+    METHOD = 'whole'
+    print("Program initiating... \nType of segmentation: " + SEGMENTATION + "\nType of perturbation: " + METHOD)
 
     DATA_DIR = cfg.paths.data_dir
     CLASSES = get_classes(SEGMENTATION)
@@ -47,7 +49,10 @@ def crop(cfg: DictConfig) -> Tuple[dict, dict]:
     score_dir = pathlib.Path(DATA_DIR, DATASET, 'metadata.csv')
     score_file = pd.read_csv(score_dir)
 
-    csv_dir = pathlib.Path(DATA_DIR, DATASET, f'metadata_{SEGMENTATION}_man_crop_{PERTURBATION}.csv')
+    if METHOD == 'whole':
+        csv_dir = pathlib.Path(DATA_DIR, DATASET, f'metadata_{SEGMENTATION}_man_whole_seg.csv')
+    else:
+        csv_dir = pathlib.Path(DATA_DIR, DATASET, f'metadata_{SEGMENTATION}_man_crop_{METHOD}.csv')
     csv_file = open(csv_dir, 'w', newline='')
     writer = csv.writer(csv_file)
     writer.writerow(['refno', 'visno', 'ethnic', 'cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed',
@@ -69,16 +74,20 @@ def crop(cfg: DictConfig) -> Tuple[dict, dict]:
         # inputs = inputs[537:]
         # targets = targets[537:]
 
-        box_dir = pathlib.Path(DATA_DIR, DATASET, mode, f"boxes_{SEGMENTATION}")
-        box_dir.mkdir(parents=True, exist_ok=True)
-        crop_dir = pathlib.Path(DATA_DIR, DATASET, mode, f"man_{SEGMENTATION}_crops_{PERTURBATION}")
-        crop_dir.mkdir(parents=True, exist_ok=True)
+        if METHOD == 'whole':
+            img_dir = pathlib.Path(DATA_DIR, DATASET, mode, f"man_{SEGMENTATION}_whole_seg")
+            img_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            box_dir = pathlib.Path(DATA_DIR, DATASET, mode, f"boxes_{SEGMENTATION}")
+            box_dir.mkdir(parents=True, exist_ok=True)
+            crop_dir = pathlib.Path(DATA_DIR, DATASET, mode, f"man_{SEGMENTATION}_crops_{METHOD}")
+            crop_dir.mkdir(parents=True, exist_ok=True)
 
         transforms = ComposeDouble([
             # ROIAlbumentationWrapper(albumentation=A.HorizontalFlip(p=0.5)),
             # ROIAlbumentationWrapper(albumentation=A.RandomScale(p=0.5, scale_limit=0.5)),
             # AlbuWrapper(albu=A.VerticalFlip(p=0.5)),
-            FunctionWrapperDouble(np.moveaxis, source=-1, destination=0),
+            FunctionWrapperDouble(np.moveaxis, source=-1, destination=0, target=True),
             FunctionWrapperDouble(normalize_01)
         ])
 
@@ -91,15 +100,52 @@ def crop(cfg: DictConfig) -> Tuple[dict, dict]:
         # dataloader
         dataloader = DataLoader(dataset=dataset,
                                 batch_size=1,
-                                shuffle=False)
+                                shuffle=False,
+                                collate_fn=collate_double_seg)
 
-        for batch_id, [x, y, x_name, y_name] in enumerate(dataloader):
+        for batch_id, [x, y, x_name] in enumerate(dataloader):
+
+            if METHOD == 'whole':
+                x = x * y
+                img = np.moveaxis(re_normalize(x[0].numpy()), source=0, destination=-1)
+
+                x_name = x_name[0]
+
+                try:
+                    index = pd.Index(score_file['filename']).get_loc(x_name)
+                except:
+                    print(x_name + " not found")
+                    continue
+
+                file_name = x_name.split(".")[0] + "_whole" + ".jpg"
+                file_dir = pathlib.Path(img_dir, file_name)
+                plt.imsave(file_dir, img)
+
+                writer.writerow(
+                    [score_file['refno'].get(index), score_file['visno'].get(index),
+                     score_file['ethnic'].get(index),
+                     int(score_file['cra'].get(index)),
+                     int(score_file['dry'].get(index)),
+                     int(score_file['ery'].get(index)),
+                     int(score_file['exc'].get(index)),
+                     int(score_file['exu'].get(index)),
+                     int(score_file['lic'].get(index)),
+                     int(score_file['oed'].get(index)),
+                     x_name, file_name, file_dir, mode,
+                     ])
+
+                print(f'{mode.upper()}: {batch_id}/{len(dataset)} {file_name} created')
+
+                continue
+
+            if METHOD == 'seg':
+                x = x * y
 
             x_name = x_name[0]
 
             # get boxes
-            box_img, boxes, _ = draw_box_countours(y[0, SEG_TYPE].numpy(), rotated=False)
-            box_img_rot, boxes_rot, rects_rot = draw_box_countours(y[0, SEG_TYPE].numpy(), rotated=True)
+            box_img, boxes, rects = draw_box_countours(y[0, 0].numpy(), rotated=False)
+            box_img_rot, boxes_rot, rects_rot = draw_box_countours(y[0, 0].numpy(), rotated=True)
 
             # save boxes
             if len(boxes) == 0:
@@ -122,9 +168,33 @@ def crop(cfg: DictConfig) -> Tuple[dict, dict]:
             img = np.moveaxis(re_normalize(x[0].numpy()), source=0, destination=-1)
             # save crops
             no = 0
-            for i, box in enumerate(boxes_rot):
-                crops = crop_square(img, box, rects_rot[i])
-                for crop in crops:
+            if METHOD == 'seg':
+                for i, box in enumerate(boxes_rot):
+                    crops = crop_square(img, box, rects_rot[i])
+                    for crop in crops:
+                        crop_file_name = x_name.split(".")[0] + "_crop" + str(no) + ".jpg"
+                        crop_file_dir = pathlib.Path(crop_dir, crop_file_name)
+                        plt.imsave(crop_file_dir, crop)
+
+                        writer.writerow(
+                            [score_file['refno'].get(index), score_file['visno'].get(index),
+                             score_file['ethnic'].get(index),
+                             int(score_file['cra'].get(index)),
+                             int(score_file['dry'].get(index)),
+                             int(score_file['ery'].get(index)),
+                             int(score_file['exc'].get(index)),
+                             int(score_file['exu'].get(index)),
+                             int(score_file['lic'].get(index)),
+                             int(score_file['oed'].get(index)),
+                             x_name, crop_file_name, crop_file_dir, mode,
+                             ])
+
+                        no += 1
+                        print(f'{mode.upper()}: {batch_id}/{len(dataset)} {crop_file_name} created')
+            else:
+                for i, box in enumerate(boxes):
+                    x, y, x2, y2 = box
+                    crop = img[int(y):int(y2), int(x):int(x2)]
                     crop_file_name = x_name.split(".")[0] + "_crop" + str(no) + ".jpg"
                     crop_file_dir = pathlib.Path(crop_dir, crop_file_name)
                     plt.imsave(crop_file_dir, crop)

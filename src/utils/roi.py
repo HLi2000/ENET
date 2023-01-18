@@ -101,7 +101,7 @@ def crop_square(image, box, rect = None):
 
     x0 = 0
     y0 = 0
-    len_threshold = 0.5
+    len_threshold = 0.25
     side_threshold = 200
 
     if width > height:
@@ -343,7 +343,7 @@ def roi_metrics(img, gt_boxes, pr_boxes):
     gt_layer = np.zeros([height, width], dtype=np.uint8)
     pr_layer = np.zeros([height, width], dtype=np.uint8)
 
-    gt_boxes = gt_boxes.astype(np.int32)
+    gt_boxes = np.array(gt_boxes).astype(np.int32)
     pr_boxes = np.array(pr_boxes).astype(np.int32)
 
     if len(gt_boxes.shape) == 2:

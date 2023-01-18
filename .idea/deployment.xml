@@ -23,6 +23,13 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="lh@172.26.133.151:22 password">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/lh/projects/ENET" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="ylab5">
         <serverdata>
           <mappings>

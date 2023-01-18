@@ -77,7 +77,7 @@ def proba_ordinal_to_categorical(inputs):
                 output[c] = (1.0 - input[c]) * p_cond
                 p_cond = input[c] * p_cond
         outputs.append(output)
-    return torch.tensor(outputs).to(inputs.device)
+    return torch.tensor(outputs)
 
 def convolve_many(arrays):
     """

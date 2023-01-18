@@ -2,6 +2,17 @@ import torch
 from torchvision.models import MobileNet_V2_Weights, mobilenet_v2
 
 
+class weightConstraint(object):
+    def __init__(self):
+        pass
+
+    def __call__(self, module):
+        if hasattr(module, 'weight'):
+            print("Constrained")
+            w = module.weight.data
+            w = w.clamp(-3.0, 3.0)
+            module.weight.data = w
+
 class Branch(torch.nn.Module):
 
     def __init__(self, in_channels, num_classes, dropout):

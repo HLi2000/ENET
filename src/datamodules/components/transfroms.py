@@ -10,7 +10,7 @@ from torchvision.ops import nms
 
 def normalize_01(inp: np.ndarray) -> np.ndarray:
     """Squash image input to the value range [0, 1] (no clipping)"""
-    inp_out = (inp - np.min(inp)) / np.ptp(inp)
+    inp_out = (inp - np.min(inp)) / (np.ptp(inp) if np.ptp(inp) > 0 else 1.0)
     return inp_out
 
 
@@ -233,3 +233,27 @@ class PredAlbumentationWrapper(Repr):
         input_out = out_dict["image"]
 
         return input_out, tar
+
+class SegAlbumentationWrapper(Repr):
+    """
+    A wrapper for the albumentation package.
+    Bounding boxes are expected to be in xyxy format (pascal_voc).
+    Bounding boxes cannot be larger than the spatial image's dimensions.
+    Use Clip() if your bounding boxes are outside of the image, before using this wrapper.
+    """
+
+    def __init__(self, albumentations: List):
+        self.albumentations = albumentations
+
+    def __call__(self, inp: np.ndarray, tar: np.ndarray):
+        # input, target
+        transform = A.Compose(
+            self.albumentations,
+        )
+
+        out_dict = transform(image=inp, mask=tar)
+
+        input_out = out_dict["image"]
+        tar_out = out_dict["mask"]
+
+        return input_out, tar_out

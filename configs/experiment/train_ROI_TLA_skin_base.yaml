@@ -14,6 +14,8 @@ defaults:
 
 task_name: "train_ROI_TLA_skin_base"
 
+auto_crop: False
+
 seg_type: "skin"
 
 perturbation: "base"
@@ -33,6 +35,7 @@ trainer:
 
 datamodule:
   batch_size: 1
+  seg_type: ${seg_type}
 
 model:
   optimizer:

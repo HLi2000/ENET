@@ -13,7 +13,7 @@ defaults:
 
 task_name: "eval_ROI_SWET_skin_base"
 
-auto_crop: True
+auto_crop: False
 
 seg_type: "skin"
 
@@ -35,6 +35,7 @@ trainer:
 datamodule:
   batch_size: 1
   auto_crop: ${auto_crop}
+  seg_type: ${seg_type}
 
 model:
   model:

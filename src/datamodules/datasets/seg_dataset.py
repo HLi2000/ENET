@@ -27,11 +27,11 @@ class SegDataSet(torch.utils.data.Dataset):
     def __getitem__(self,
                     index: int):
         # Select the sample
-        input_ID = self.inputs[index]
-        target_ID = self.targets[index]
+        input_path = self.inputs[index]
+        target_path = self.targets[index]
 
         # Load input and target
-        x, y = self.read_images(input_ID, target_ID)
+        x, y = self.read_images(input_path, target_path)
 
         x = cv2.cvtColor(x, cv2.COLOR_BGR2RGB)
 
@@ -43,9 +43,9 @@ class SegDataSet(torch.utils.data.Dataset):
         ad = y > 192
 
         if self.seg_type == 0:
-            y = np.expand_dims(skin, axis=0).astype(np.uint8)
+            y = np.expand_dims(skin, axis=-1).astype(np.uint8)
         else:
-            y = np.stack([skin, ad], axis=0).astype(np.uint8)
+            y = np.expand_dims(ad, axis=-1).astype(np.uint8)
 
         if self.transform is not None:
             x, y = self.transform(x, y)  # returns np.ndarrays
@@ -54,7 +54,7 @@ class SegDataSet(torch.utils.data.Dataset):
         x = torch.from_numpy(x).type(torch.float32)
         y = torch.from_numpy(y).type(torch.float32)
 
-        return x, y, self.inputs[index].name, self.targets[index].name
+        return {'x': x, 'y': y, 'x_name': self.inputs[index].name}
 
     @staticmethod
     def read_images(inp, tar):

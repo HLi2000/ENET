@@ -1,4 +1,5 @@
 import pathlib
+import random
 from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
@@ -59,8 +60,14 @@ class PredDataModule(LightningDataModule):
         perturbation: str = "base",
         ordinal: bool = True,
         class_weighted: bool = False,
+        method: str = 'ROI',
+        num_folds: int = 5,
+        k: int = 0,
     ):
         super().__init__()
+
+        self.k = k
+        self.num_folds = num_folds
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
@@ -102,12 +109,13 @@ class PredDataModule(LightningDataModule):
     @property
     def class_weights(self):
         if self.hparams.class_weighted:
-            auto_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_auto_crop_{self.hparams.perturbation}.csv"
+            auto_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_{self.hparams.method}_crop_{self.hparams.perturbation}.csv"
             auto_csv = pd.read_csv(auto_csv_dir)
             man_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_man_crop_{self.hparams.perturbation}.csv"
             man_csv = pd.read_csv(man_csv_dir)
 
             csv = pd.concat([auto_csv, man_csv])
+            # csv = man_csv
             csv_train = csv[csv['task'] == 'train']
 
             weights_test = []
@@ -145,68 +153,120 @@ class PredDataModule(LightningDataModule):
         This method is called by lightning with both `trainer.fit()` and `trainer.test()`, so be
         careful not to execute things like random split twice!
         """
-        # Assign train/val datasets for use in dataloaders
-        if stage == 'fit' or stage is None:
-            if self.hparams.crop:
-                auto_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_auto_crop_{self.hparams.perturbation}.csv"
+        if self.hparams.crop:
+            auto_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_{self.hparams.method}_crop_{self.hparams.perturbation}.csv"
+            auto_csv = pd.read_csv(auto_csv_dir)
+
+            pred_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_{self.hparams.method}_pred_{self.hparams.perturbation}.csv"
+            pred_csv = pd.read_csv(pred_csv_dir)
+
+            auto_csv = pd.concat([auto_csv, pred_csv])
+
+            auto_patients = [x for _, x in auto_csv.groupby('refno')]
+            auto_folds = split_list(auto_patients, self.num_folds)
+            # print(auto_folds)
+
+            auto_csv_val = pd.concat(auto_folds[self.k])
+            auto_csv_train = pd.concat(sum([x for i, x in enumerate(auto_folds) if i != self.k], []))
+
+            man_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_man_crop_{self.hparams.method}.csv"
+            man_csv = pd.read_csv(man_csv_dir)
+
+            man_patients = [x for _, x in man_csv.groupby('refno')]
+            man_folds = split_list(man_patients, self.num_folds)
+            # print(auto_folds)
+
+            # man_csv_val = pd.concat(man_folds[self.k])
+            man_csv_train = pd.concat(sum([x for i, x in enumerate(man_folds) if i != self.k], []))
+
+            csv_val = auto_csv_val
+            csv_train = pd.concat([auto_csv_train, man_csv_train])
+            # csv = man_csv
+        else:
+            if self.hparams.method == 'seg':
+                auto_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_{self.hparams.method}_whole_{self.hparams.perturbation}.csv"
                 auto_csv = pd.read_csv(auto_csv_dir)
-                man_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_man_crop_{self.hparams.perturbation}.csv"
+
+                pred_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_{self.hparams.method}_pred_whole_{self.hparams.perturbation}.csv"
+                pred_csv = pd.read_csv(pred_csv_dir)
+
+                auto_csv = pd.concat([auto_csv, pred_csv])
+
+                auto_patients = [x for _, x in auto_csv.groupby('refno')]
+                auto_folds = split_list(auto_patients, self.num_folds)
+
+                auto_csv_val = pd.concat(auto_folds[self.k])
+                auto_csv_train = pd.concat(sum([x for i, x in enumerate(auto_folds) if i != self.k], []))
+
+                man_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_man_whole_seg.csv"
                 man_csv = pd.read_csv(man_csv_dir)
 
-                # csv = pd.concat([auto_csv, man_csv])
-                csv = man_csv
-                csv_train = csv[csv['task'] == 'train'][:10]
-                csv_val = csv[csv['task'] == 'valid'][:10]
+                man_patients = [x for _, x in man_csv.groupby('refno')]
+                man_folds = split_list(man_patients, self.num_folds)
 
-                inputs_train = [filepath for filepath in csv_train['filepath']]
-                targets_train = csv_train[['cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed']].to_dict('records')
+                # man_csv_val = pd.concat(man_folds[self.k])
+                man_csv_train = pd.concat(sum([x for i, x in enumerate(man_folds) if i != self.k], []))
 
-                inputs_val = [filepath for filepath in csv_val['filepath']]
-                targets_val = csv_val[['cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed']].to_dict('records')
+                csv_val = auto_csv_val
+                csv_train = pd.concat([auto_csv_train, man_csv_train])
+            else:
+                csv_dir = self.data_dir / f"metadata.csv"
+                csv = pd.read_csv(csv_dir)
 
-                if inputs_train and inputs_val:
-                    log.info(f'{len(auto_csv)} crops loaded from {auto_csv_dir}')
+                patients = [x for _, x in csv.groupby('refno')]
+                folds = split_list(patients, self.num_folds)
+
+                csv_val = pd.concat(folds[self.k])
+                csv_train = pd.concat(sum([x for i, x in enumerate(folds) if i != self.k], []))
+                # csv_val = csv_train
+
+        inputs_train = [filepath for filepath in csv_train['filepath']]
+        targets_train = csv_train[['cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed']].to_dict('records')
+
+        inputs_val = [filepath for filepath in csv_val['filepath']]
+        targets_val = csv_val[['cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed']].to_dict('records')
+
+        # Assign train/val datasets for use in dataloaders
+        if stage == 'fit' or stage is None:
+
+            if inputs_train and inputs_val:
+                if self.hparams.crop:
+                    log.info(f'{len(auto_csv)} crops loaded from {auto_csv_dir} and {pred_csv_dir}')
                     log.info(f'{len(man_csv)} crops loaded from {man_csv_dir}')
-                    log.info(f'Train: {len(inputs_train)} crops')
-                    log.info(f'Valid: {len(inputs_val)} crops')
                 else:
-                    raise ValueError('Wrong csv files!')
+                    log.info(f'{len(csv)} crops loaded from {csv_dir}')
+                log.info(f'Train: {len(inputs_train)} crops')
+                log.info(f'Valid: {len(inputs_val)} crops')
+            else:
+                raise ValueError('Wrong csv files!')
 
-                self.dataset_train = PredDataSet(inputs=inputs_train,
-                                                targets=targets_train,
-                                                transform=self.transforms_train)
+            self.dataset_train = PredDataSet(inputs=inputs_train,
+                                            targets=targets_train,
+                                            transform=self.transforms_train)
 
-                self.dataset_val = PredDataSet(inputs=inputs_val,
-                                              targets=targets_val,
-                                              transform=self.transforms_valid)
+            self.dataset_val = PredDataSet(inputs=inputs_val,
+                                          targets=targets_val,
+                                          transform=self.transforms_valid)
 
         # Assign test dataset for use in dataloader(s)
         if stage == 'test' or stage is None:
-            if self.hparams.crop:
-                # auto_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_pred_{self.hparams.perturbation}.csv"
-                auto_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_man_crop_{self.hparams.perturbation}.csv"
-                auto_csv = pd.read_csv(auto_csv_dir)
-                # man_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_man_crop_{self.hparams.perturbation}.csv"
-                # man_csv = pd.read_csv(man_csv_dir)
 
-                # csv = pd.concat([auto_csv, man_csv])
-                csv = auto_csv
-                # csv_test = csv[csv['task'] == 'test']
-                csv_test = csv[csv['task'] == 'train'][:10]
+            inputs_val = [filepath for filepath in csv_val['filepath']]
+            targets_val = csv_val[['cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed']].to_dict('records')
 
-                inputs_test = [filepath for filepath in csv_test['filepath']]
-                targets_test = csv_test[['cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed']].to_dict('records')
-
-                if inputs_test:
-                    log.info(f'{len(auto_csv)} crops loaded from {auto_csv_dir}')
+            if inputs_val:
+                if self.hparams.crop:
+                    log.info(f'{len(auto_csv)} crops loaded from {auto_csv_dir} and {pred_csv_dir}')
                     # log.info(f'{len(man_csv)} crops loaded from {man_csv_dir}')
-                    log.info(f'Test: {len(inputs_test)} crops')
                 else:
-                    raise ValueError('Wrong csv files!')
+                    log.info(f'{len(csv)} crops loaded from {csv_dir}')
+                log.info(f'Test: {len(inputs_val)} crops')
+            else:
+                raise ValueError('Wrong csv files!')
 
-                self.dataset_test = PredDataSet(inputs=inputs_test,
-                                               targets=targets_test,
-                                               transform=self.transforms_test)
+            self.dataset_test = PredDataSet(inputs=inputs_val,
+                                           targets=targets_val,
+                                           transform=self.transforms_test)
 
 
     def train_dataloader(self):
@@ -261,3 +321,9 @@ if __name__ == "__main__":
     cfg = omegaconf.OmegaConf.load(root / "configs" / "datamodule" / "pred.yaml")
     cfg.data_dir = str(root / "data")
     _ = hydra.utils.instantiate(cfg)
+
+def split_list(a, n):
+    random.seed(37)
+    random.shuffle(a)
+    k, m = divmod(len(a), n)
+    return [a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n)]

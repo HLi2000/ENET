@@ -7,6 +7,7 @@ from pytorch_lightning import LightningModule
 from torchmetrics import MinMetric, MeanMetric, MeanAbsoluteError, MeanSquaredError, R2Score, MaxMetric
 from torchmetrics.functional import mean_absolute_error, mean_squared_error
 
+from src.models.components.eczemanet import weightConstraint
 from src.utils.pred import ordinariser, ordinariser_reversed, proba_ordinal_to_categorical, convolve_many
 
 
@@ -35,6 +36,7 @@ class PredModule(LightningModule):
         n_classes: int = 4,
         crop: bool = True,
         class_weights = None,
+        net: str = 'EN'
     ):
         super().__init__()
 
@@ -43,9 +45,18 @@ class PredModule(LightningModule):
         self.save_hyperparameters(logger=False, ignore=["model"])
 
         self.model = model
+        if net == 'EN':
+            constraints = weightConstraint()
+            model._modules['branch0'].apply(constraints)
+            model._modules['branch1'].apply(constraints)
+            model._modules['branch2'].apply(constraints)
+            model._modules['branch3'].apply(constraints)
+            model._modules['branch4'].apply(constraints)
+            model._modules['branch5'].apply(constraints)
+            model._modules['branch6'].apply(constraints)
 
         # loss functions
-        self.criterion = []
+        # self.criterion = []
         # for i in range(7):
         #     if class_weights is not None:
         #         self.criterion.append(torch.nn.BCELoss(weight=class_weights[i]))
@@ -108,15 +119,22 @@ class PredModule(LightningModule):
 
             prob_cat = []
             for i in range(logits.size()[0]): #batch
-                prob_cat.append(proba_ordinal_to_categorical(logits[i]))
+                prob_cat.append(proba_ordinal_to_categorical(logits[i]).to(logits.device))
             prob_cat = torch.stack(prob_cat, axis=0).to(logits.device)
             # preds = torch.argmax(prob_cat, dim=2)
             preds = torch.tensor([
                 [torch.sum(p * torch.arange(len(p)).to(logits.device)) for p in prob]
                                  for prob in prob_cat]).to(logits.device)
         else:
-            loss = self.criterion(logits, y_batch)
-            preds = torch.argmax(logits, dim=1)
+            targets = torch.tensor([[onehot(value, 4) for key, value in y.items()] for y in y_batch]).type(torch.float32).to(logits.device)
+            loss = self.criterion(logits, targets)
+            # preds = torch.argmax(logits, dim=1)
+            prob_cat = logits
+            preds = torch.tensor([
+                [torch.sum(p * torch.arange(len(p)).to(logits.device)) for p in prob]
+                for prob in prob_cat]).to(logits.device)
+            targets = torch.tensor([[value for key, value in y.items()] for y in y_batch])\
+                .type(torch.float32).to(logits.device)
         return loss, preds, targets, prob_cat
 
     def training_step(self, batch: Any, batch_idx: int):
@@ -126,7 +144,7 @@ class PredModule(LightningModule):
         self.train_loss(loss)
         self.train_mae(preds, targets)
         self.train_mse(preds, targets)
-        self.train_r2(preds.squeeze(), targets.squeeze())
+        self.train_r2(preds.flatten(), targets.flatten())
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/MAE", self.train_mae, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/MSE", self.train_mse, on_step=False, on_epoch=True, prog_bar=True)
@@ -148,7 +166,7 @@ class PredModule(LightningModule):
         self.val_loss(loss)
         self.val_mae(preds, targets)
         self.val_mse(preds, targets)
-        self.val_r2(preds.squeeze(), targets.squeeze())
+        self.val_r2(preds.flatten(), targets.flatten())
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/MAE", self.val_mae, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/MSE", self.val_mse, on_step=False, on_epoch=True, prog_bar=True)
@@ -177,7 +195,7 @@ class PredModule(LightningModule):
         self.test_loss(loss)
         self.test_mae(preds, targets)
         self.test_mse(preds, targets)
-        self.test_r2(preds.squeeze(), targets.squeeze())
+        self.test_r2(preds.flatten(), targets.flatten())
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/MAE", self.test_mae, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/MSE", self.test_mse, on_step=False, on_epoch=True, prog_bar=True)
@@ -273,3 +291,8 @@ if __name__ == "__main__":
     root = pyrootutils.setup_root(__file__, pythonpath=True)
     cfg = omegaconf.OmegaConf.load(root / "configs" / "model" / "mnist.yaml")
     _ = hydra.utils.instantiate(cfg)
+
+def onehot(val, n):
+    tar = [0] * n
+    tar[int(val)] = 1
+    return tar

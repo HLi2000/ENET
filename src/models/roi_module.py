@@ -317,10 +317,43 @@ class FasterRCNNModule(LightningModule):
         if self.hparams.auto_crop:
             map, map_50, map_75 = torch.tensor(-1), torch.tensor(-1), torch.tensor(-1)
         else:
-            self.test_map.update(target=y, preds=preds)
-            metric = self.test_map.compute()
+            gt_boxes = [
+                from_dict_to_boundingbox(file=target, name=name, groundtruth=True)
+                for target, name in zip(y, x_name)
+            ]
+            gt_boxes = list(chain(*gt_boxes))
 
-            map, map_50, map_75 = metric["map"], metric["map_50"], metric["map_75"]
+            pred_boxes = [
+                from_dict_to_boundingbox(file=pred, name=name, groundtruth=False)
+                for pred, name in zip(preds, x_name)
+            ]
+            pred_boxes = list(chain(*pred_boxes))
+
+            metric = self.val_map(
+                gt_boxes=gt_boxes,
+                det_boxes=pred_boxes,
+                iou_threshold=0.5,
+                method=MethodAveragePrecision.EVERY_POINT_INTERPOLATION,
+                generate_table=True,
+            )
+
+            map_50 = metric["m_ap"]
+
+            metric = self.val_map(
+                gt_boxes=gt_boxes,
+                det_boxes=pred_boxes,
+                iou_threshold=0.75,
+                method=MethodAveragePrecision.EVERY_POINT_INTERPOLATION,
+                generate_table=True,
+            )
+
+            map_75 = metric["m_ap"]
+            map = (map_50 + map_75) / 2
+
+            # self.test_map.update(target=y, preds=preds)
+            # metric = self.test_map.compute()
+            #
+            # map, map_50, map_75 = metric["map"], metric["map_50"], metric["map_75"]
             self.log("test/mAP", map, on_step=False, on_epoch=True, prog_bar=True)
             self.log("test/mAP_50", map_50, on_step=False, on_epoch=True, prog_bar=True)
             self.log("test/mAP_75", map_75, on_step=False, on_epoch=True, prog_bar=True)

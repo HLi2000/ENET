@@ -33,6 +33,7 @@ trainer:
 
 datamodule:
   batch_size: 1
+  seg_type: ${seg_type}
 
 model:
   optimizer:

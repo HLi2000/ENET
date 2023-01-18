@@ -17,9 +17,11 @@ crop: True
 
 ordinal: True
 
-class_weighted: True
+class_weighted: False
 
-seg_type: "skin"
+method: 'ROI'
+
+seg_type: "ad"
 
 perturbation: "base"
 
@@ -31,7 +33,7 @@ seed: 37
 
 #ckpt_path: /home/lh/projects/ENET/logs/train_ROI_SWET0_skin_base/runs/2022-10-28_22-42-51/checkpoints/epoch_009.ckpt
 #ckpt_path: /home/lh/projects/ENET/logs/train_pred_SWET0_skin_base/epoch_007.ckpt
-ckpt_path: /home/lh/projects/ENET/logs/train_pred_SWET0_skin_base/last.ckpt
+ckpt_path: /home/lh/projects/ENET/logs/train_pred_SWET0_ad_base/runs/2022-11-01_14-38-06/checkpoints/epoch_047.ckpt
 
 trainer:
   accelerator: gpu
@@ -39,6 +41,12 @@ trainer:
 
 datamodule:
   batch_size: 1
+  seg_type: ${seg_type}
+  crop: ${crop}
+  perturbation: ${perturbation}
+  ordinal: ${ordinal}
+  class_weighted: ${class_weighted}
+  method: ${method}
 
 model:
   model:
@@ -46,3 +54,5 @@ model:
     num_classes: 4
     dropout: 0.5
   n_classes: 4
+  ordinal: ${ordinal}
+  crop: ${crop}

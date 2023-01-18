@@ -1,6 +1,6 @@
 import torch
 import pathlib
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from skimage.io import imread
 from typing import List, Dict
 from src.datamodules.components.transfroms import ComposeDouble
@@ -42,7 +42,7 @@ class PredDataSet(torch.utils.data.Dataset):
             x = rgba2rgb(x)
 
         if self.transform is not None:
-            x, target = self.transform(x, target)  # returns np.ndarrays
+            x, target = self.transform(x, target)  # returns np.ndarray
 
         # Typecasting
         x = torch.from_numpy(x).type(torch.float32)

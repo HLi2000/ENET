@@ -14,6 +14,8 @@ defaults:
 
 task_name: "train_ROI_SWET_ad_base"
 
+auto_crop: False
+
 seg_type: "ad"
 
 perturbation: "base"
@@ -25,18 +27,20 @@ tags: ["ROI", "ad", "base", "SWET", "faster_RCNN"]
 seed: 37
 
 trainer:
+#  accelerator: cpu
   accelerator: gpu
   devices: 1
   min_epochs: 10
-  max_epochs: 100
+  max_epochs: 50
   gradient_clip_val: 0.5
 
 datamodule:
   batch_size: 1
+  seg_type: ${seg_type}
 
 model:
   optimizer:
-    lr: 0.0003
+    lr: 0.001
     momentum: 0.9
     weight_decay: 0.005
   scheduler:

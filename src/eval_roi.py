@@ -83,13 +83,14 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     score_file = pd.read_csv(score_dir)
 
     if cfg.auto_crop:
-        csv_dir = pathlib.Path(cfg.data_dir, cfg.dataset, f'metadata_{cfg.seg_type}_auto_crop_{cfg.perturbation}.csv')
+        csv_dir = pathlib.Path(cfg.data_dir, cfg.dataset, f'metadata_{cfg.seg_type}_ROI_crop_{cfg.perturbation}.csv')
         csv_file = open(csv_dir, 'w', newline='')
         writer = csv.writer(csv_file)
         writer.writerow(['refno', 'visno', 'ethnic', 'cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed',
                          'filename', 'crop', 'filepath', 'task'])
 
         length = len(res_dicts)
+        print(str(length)+'!!!!!!!!!!!!!!!!!!!')
         for i, res in enumerate(res_dicts):
             x_name, x, boxes = res['x_name'], res['x'], res['pred_boxes']
 
@@ -98,7 +99,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 
             img = np.moveaxis(re_normalize(x), source=0, destination=-1)
 
-            crop_dir = pathlib.Path(cfg.data_dir, cfg.dataset, task, f"auto_{cfg.seg_type}_crops_{cfg.perturbation}")
+            crop_dir = pathlib.Path(cfg.data_dir, cfg.dataset, task, f"ROI_{cfg.seg_type}_crops_{cfg.perturbation}")
             crop_dir.mkdir(parents=True, exist_ok=True)
 
             no = 0
@@ -129,7 +130,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 
         csv_file.close()
     else:
-        csv_dir1 = pathlib.Path(cfg.data_dir, cfg.dataset, f'metadata_{cfg.seg_type}_pred_{cfg.perturbation}.csv')
+        csv_dir1 = pathlib.Path(cfg.data_dir, cfg.dataset, f'metadata_{cfg.seg_type}_ROI_pred_{cfg.perturbation}.csv')
         csv_file1 = open(csv_dir1, 'w', newline='')
         writer1 = csv.writer(csv_file1)
         writer1.writerow(['refno', 'visno', 'ethnic', 'cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed',
@@ -150,7 +151,7 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 
             img = np.moveaxis(re_normalize(x), source=0, destination=-1)
 
-            crop_dir = pathlib.Path(cfg.data_dir, cfg.dataset, task, f"pred_{cfg.seg_type}_crops_{cfg.perturbation}")
+            crop_dir = pathlib.Path(cfg.data_dir, cfg.dataset, task, f"ROI_{cfg.seg_type}_crops_{cfg.perturbation}")
             crop_dir.mkdir(parents=True, exist_ok=True)
 
             no = 0

@@ -14,6 +14,8 @@ defaults:
 
 task_name: "train_ROI_SWET_skin_base"
 
+auto_crop: False
+
 seg_type: "skin"
 
 perturbation: "base"
@@ -27,16 +29,17 @@ seed: 37
 trainer:
   accelerator: gpu
   devices: 1
-  min_epochs: 50
-  max_epochs: 100
+  min_epochs: 10
+  max_epochs: 50
   gradient_clip_val: 0.5
 
 datamodule:
   batch_size: 1
+  seg_type: ${seg_type}
 
 model:
   optimizer:
-    lr: 0.0003
+    lr: 0.001
     momentum: 0.9
     weight_decay: 0.005
   scheduler:

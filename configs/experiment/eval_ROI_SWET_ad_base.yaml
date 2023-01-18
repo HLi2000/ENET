@@ -1,0 +1,50 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /datamodule: roi.yaml
+  - override /model: roi.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+task_name: "eval_ROI_SWET_ad_base"
+
+auto_crop: True
+
+seg_type: "ad"
+
+perturbation: "base"
+
+dataset: "SWET"
+
+tags: ["ROI", "ad", "base", "SWET", "faster_RCNN"]
+
+seed: 37
+
+#ckpt_path: /home/lh/projects/ENET/logs/train_ROI_SWET0_skin_base/runs/2022-10-28_22-42-51/checkpoints/epoch_009.ckpt
+ckpt_path: /rds/general/user/hl3719/home/projects/ENET/logs/train_ROI_SWET_ad_base/runs/2022-11-01_02-11-48/checkpoints/epoch_024.ckpt
+
+trainer:
+  accelerator: gpu
+  devices: 1
+
+datamodule:
+  batch_size: 1
+  auto_crop: ${auto_crop}
+  seg_type: ${seg_type}
+
+model:
+  model:
+    _target_: src.models.roi_module.get_faster_rcnn_resnet
+    num_classes: 2
+    backbone_name: "resnet50"
+    anchor_size: ((32,), (64,), (128,), (512,))
+    aspect_ratios: ((0.5, 1.0, 2.0),)
+    fpn: True
+    min_size: 600
+    max_size: 1024
+  auto_crop: ${auto_crop}

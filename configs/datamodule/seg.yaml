@@ -1,0 +1,7 @@
+_target_: src.datamodules.seg_datamodule.SegDataModule
+seg_type: ${seg_type}
+data_dir: ${paths.data_dir}${dataset}
+batch_size: 2
+num_workers: 0
+pin_memory: False
+auto_crop: False

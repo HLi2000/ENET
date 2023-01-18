@@ -1,0 +1,42 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /datamodule: seg.yaml
+  - override /model: seg.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+task_name: "eval_seg_SWET0_skin_base"
+
+seg_type: "skin"
+
+auto_crop: True
+
+perturbation: "base"
+
+dataset: "SWET_0"
+
+tags: ["seg", "skin", "base", "SWET_0", "UNet"]
+
+seed: 37
+
+ckpt_path: /home/lh/projects/ENET/logs/train_seg_SWET_skin_base/runs/2022-11-02_11-12-55/checkpoints/epoch=0-step=15.ckpt
+
+trainer:
+  accelerator: gpu
+  devices: 1
+
+datamodule:
+  batch_size: 1
+  seg_type: ${seg_type}
+  auto_crop: ${auto_crop}
+
+model:
+  auto_crop: ${auto_crop}
+  encoder_name: 'efficientnet-b3'
+

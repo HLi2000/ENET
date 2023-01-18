@@ -1,0 +1,56 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /datamodule: pred.yaml
+  - override /model: pred.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+task_name: "eval_pred_TLA_skin_base_ascorad"
+
+crop: False
+
+ordinal: True
+
+class_weighted: False
+
+seg_type: "skin"
+
+method: 'ASCORAD'
+
+perturbation: "base"
+
+dataset: "TLA"
+
+tags: ["pred", "skin", "base", "TLA", "ASCORAD"]
+
+seed: 37
+
+ckpt_path: /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_TLA_skin_base_ascorad/runs/2022-11-18_12-50-40/checkpoints/epoch_070.ckpt
+
+trainer:
+  accelerator: cpu
+  devices: 1
+
+datamodule:
+  batch_size: 1
+  seg_type: ${seg_type}
+  crop: ${crop}
+  perturbation: ${perturbation}
+  ordinal: ${ordinal}
+  class_weighted: ${class_weighted}
+  method: ${method}
+
+model:
+  model:
+    _target_: src.models.components.ascorad.ASCORAD
+    num_classes: 4
+    dropout: 0.5
+  n_classes: 4
+  ordinal: ${ordinal}
+  crop: ${crop}

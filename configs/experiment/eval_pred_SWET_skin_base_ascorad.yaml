@@ -1,0 +1,67 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /datamodule: pred.yaml
+  - override /model: pred.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+task_name: "train_pred_SWET_skin_base_ascorad"
+
+num_folds: 5
+
+crop: False
+
+ordinal: False
+
+class_weighted: False
+
+method: 'raw'
+
+net: 'ASCORAD'
+
+seg_type: "skin"
+
+perturbation: "base"
+
+dataset: "SWET"
+
+tags: ["pred", "skin", "base", "SWET", "ASCORAD"]
+
+seed: 37
+
+ckpt_path:
+  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_SWET_skin_base_ascorad/runs/2022-12-09_21-15-13/checkpoints/epoch_038.ckpt
+  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_SWET_skin_base_ascorad/runs/2022-12-09_21-15-13/checkpoints/epoch_044.ckpt
+  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_SWET_skin_base_ascorad/runs/2022-12-09_21-15-13/checkpoints/epoch_046.ckpt
+  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_SWET_skin_base_ascorad/runs/2022-12-09_21-15-13/checkpoints/epoch_043.ckpt
+  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_SWET_skin_base_ascorad/runs/2022-12-09_21-15-13/checkpoints/epoch_041.ckpt
+
+trainer:
+  accelerator: cpu
+  devices: 1
+
+datamodule:
+  batch_size: 1
+  seg_type: ${seg_type}
+  crop: ${crop}
+  perturbation: ${perturbation}
+  ordinal: ${ordinal}
+  class_weighted: ${class_weighted}
+  method: ${method}
+  num_folds: ${num_folds}
+  k: 0
+
+model:
+  model:
+    _target_: src.models.components.ascorad.ASCORAD
+    num_classes: 4
+    dropout: 0.5
+  n_classes: 4
+  ordinal: ${ordinal}
+  crop: ${crop}

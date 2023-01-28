@@ -2,7 +2,26 @@ import itertools
 
 import torch
 
+def rps(predictions, observed):
+    """Vectorized version of Ranked Probability Score.
+    A lower value is a better score.
+    From: Colin Catlin, https://syllepsis.live/2022/01/22/ranked-probability-score-in-python/
 
+    Args:
+        predictions (pd.DataFrame): each column is an outcome category
+            with values as the 0 to 1 probability of that category
+        observed (pd.DataFrame): each column is an outcome category
+            with values of 0 OR 1 with 1 being that category occurred
+    """
+    assert (
+        predictions.shape == observed.shape
+    ), "prediction and observed array shapes must match"
+    ncat = predictions.shape[0] - 1
+    return (
+        torch.sum(
+            (torch.cumsum(predictions, axis=0) - torch.cumsum(observed, axis=0)) ** 2, axis=0
+        ) / ncat
+    )
 def ordinariser(inputs, n_classes=4):
     """ Label ordinarizer
 

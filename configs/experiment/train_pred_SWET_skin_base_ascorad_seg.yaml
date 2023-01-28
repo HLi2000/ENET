@@ -46,7 +46,7 @@ trainer:
 #  gradient_clip_val: 0.5
 
 datamodule:
-  batch_size: 28
+  batch_size: 32
   seg_type: ${seg_type}
   crop: ${crop}
   perturbation: ${perturbation}

@@ -58,7 +58,7 @@ datamodule:
 
 model:
   optimizer:
-    lr: 0.3
+    lr: 0.03
     momentum: 0.9
 #    weight_decay: 0.005
   scheduler:

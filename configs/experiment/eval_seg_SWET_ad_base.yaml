@@ -15,7 +15,7 @@ task_name: "eval_seg_SWET_ad_base"
 
 seg_type: "ad"
 
-auto_crop: True
+auto_crop: False
 
 perturbation: "base"
 

@@ -234,7 +234,11 @@ class PredDataModule(LightningDataModule):
                     log.info(f'{len(auto_csv)} crops loaded from {auto_csv_dir} and {pred_csv_dir}')
                     log.info(f'{len(man_csv)} crops loaded from {man_csv_dir}')
                 else:
-                    log.info(f'{len(csv)} crops loaded from {csv_dir}')
+                    if self.hparams.method == 'seg':
+                        log.info(f'{len(auto_csv)} crops loaded from {auto_csv_dir} and {pred_csv_dir}')
+                        log.info(f'{len(man_csv)} crops loaded from {man_csv_dir}')
+                    else:
+                        log.info(f'{len(csv)} crops loaded from {csv_dir}')
                 log.info(f'Train: {len(inputs_train)} crops')
                 log.info(f'Valid: {len(inputs_val)} crops')
             else:
@@ -259,7 +263,11 @@ class PredDataModule(LightningDataModule):
                     log.info(f'{len(auto_csv)} crops loaded from {auto_csv_dir} and {pred_csv_dir}')
                     # log.info(f'{len(man_csv)} crops loaded from {man_csv_dir}')
                 else:
-                    log.info(f'{len(csv)} crops loaded from {csv_dir}')
+                    if self.hparams.method == 'seg':
+                        log.info(f'{len(auto_csv)} crops loaded from {auto_csv_dir} and {pred_csv_dir}')
+                        log.info(f'{len(man_csv)} crops loaded from {man_csv_dir}')
+                    else:
+                        log.info(f'{len(csv)} crops loaded from {csv_dir}')
                 log.info(f'Test: {len(inputs_val)} crops')
             else:
                 raise ValueError('Wrong csv files!')

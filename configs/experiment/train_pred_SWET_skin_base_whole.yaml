@@ -12,7 +12,7 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-task_name: "train_pred_SWET_skin_base_raw"
+task_name: "train_pred_SWET_skin_base_whole"
 
 num_folds: 5
 
@@ -22,7 +22,7 @@ ordinal: True
 
 class_weighted: False
 
-method: 'raw'
+method: 'seg'
 
 net: 'EN'
 
@@ -32,7 +32,7 @@ perturbation: "base"
 
 dataset: "SWET"
 
-tags: ["pred", "skin", "base", "SWET", "EczemaNet", 'raw']
+tags: ["pred", "skin", "base", "SWET", "EczemaNet", 'whole']
 
 seed: 37
 

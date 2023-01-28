@@ -13,7 +13,7 @@ defaults:
 
 task_name: "eval_ROI_SWET_ad_base"
 
-auto_crop: True
+auto_crop: False
 
 seg_type: "ad"
 

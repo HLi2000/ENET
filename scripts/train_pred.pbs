@@ -6,4 +6,4 @@ module load anaconda3/personal
 source activate ENV
 cd $PBS_O_WORKDIR
 
-python src/train_pred.py logger=wandb experiment=train_pred_SWET_skin_base_ascorad.yaml
+python src/train_pred.py logger=wandb experiment=train_pred_SWET_skin_base_ascorad_roi.yaml

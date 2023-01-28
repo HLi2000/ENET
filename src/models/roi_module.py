@@ -287,7 +287,7 @@ class FasterRCNNModule(LightningModule):
 
         sen, pre, acc, dice, iou = [], [], [], [], []
         for i in range(len(x)):
-            prs = [box.cpu().numpy() for id, box in enumerate(preds[i]["boxes"]) if preds[i]["scores"][id] > 0.75]
+            prs = [box.cpu().numpy() for id, box in enumerate(preds[i]["boxes"]) if preds[i]["scores"][id] > 0.5]
             roi_metric = roi_metrics(x[i][0].cpu().numpy(), y[i]["boxes"].cpu().numpy(), prs)
             sen.append(roi_metric['sen'])
             pre.append(roi_metric['pre'])
@@ -360,7 +360,7 @@ class FasterRCNNModule(LightningModule):
 
         sen, pre, acc, dice, iou = [], [], [], [], []
         for i in range(len(x)):
-            prs = [box.cpu().numpy() for id, box in enumerate(preds[i]["boxes"]) if preds[i]["scores"][id] > 0.75]
+            prs = [box.cpu().numpy() for id, box in enumerate(preds[i]["boxes"]) if preds[i]["scores"][id] > 0.5]
             roi_metric = roi_metrics(x[i][0].cpu().numpy(), y[i]["boxes"].cpu().numpy(), prs)
             sen.append(roi_metric['sen'])
             pre.append(roi_metric['pre'])

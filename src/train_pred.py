@@ -11,7 +11,7 @@ root = pyrootutils.setup_root(
 import pandas as pd
 import torch
 
-from src.utils.pred import convolve_many
+from src.utils.pred import convolve_many, rps
 from src.utils.utils import TestStore
 
 from typing import List, Optional, Tuple
@@ -149,6 +149,16 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
                     EASI_se = mean_squared_error(EASI_pred, EASI)
                     # EASI_rmse = torch.sqrt(EASI_mse)
 
+                    SASSAD_pmf = torch.zeros_like(SASSAD_pred_pmf)
+                    SASSAD_pmf[int(SASSAD)] = 1
+                    SASSAD_rps = rps(SASSAD_pred_pmf, SASSAD_pmf)
+                    TISS_pmf = torch.zeros_like(TISS_pred_pmf)
+                    TISS_pmf[int(TISS)] = 1
+                    TISS_rps = rps(TISS_pred_pmf, TISS_pmf)
+                    EASI_pmf = torch.zeros_like(EASI_pred_pmf)
+                    EASI_pmf[int(EASI)] = 1
+                    EASI_rps = rps(EASI_pred_pmf, EASI_pmf)
+
                     res.append({'filepath': x_path,
                                 'cra_pred': signs_pred[0].item(), 'dry_pred': signs_pred[1].item(),
                                 'ery_pred': signs_pred[2].item(), 'exc_pred': signs_pred[3].item(),
@@ -166,8 +176,11 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
                                 'TISS': TISS.item(), 'TISS_pred': TISS_pred.item(),
                                 'EASI': EASI.item(), 'EASI_pred': EASI_pred.item(),
                                 'SASSAD_ae': SASSAD_ae.item(), 'SASSAD_se': SASSAD_se.item(),
+                                'SASSAD_rps': SASSAD_rps.item(),
                                 'TISS_ae': TISS_ae.item(), 'TISS_se': TISS_se.item(),
+                                'TISS_rps': TISS_rps.item(),
                                 'EASI_ae': EASI_ae.item(), 'EASI_se': EASI_se.item(),
+                                'EASI_rps': EASI_rps.item(),
                                 'k': k,
                                 })
 
@@ -208,6 +221,16 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
                     EASI_se = mean_squared_error(EASI_pred, EASI)
                     # EASI_rmse = torch.sqrt(EASI_mse)
 
+                    SASSAD_pmf = torch.zeros_like(SASSAD_pred_pmf)
+                    SASSAD_pmf[int(SASSAD)] = 1
+                    SASSAD_rps = rps(SASSAD_pred_pmf, SASSAD_pmf)
+                    TISS_pmf = torch.zeros_like(TISS_pred_pmf)
+                    TISS_pmf[int(TISS)] = 1
+                    TISS_rps = rps(TISS_pred_pmf, TISS_pmf)
+                    EASI_pmf = torch.zeros_like(EASI_pred_pmf)
+                    EASI_pmf[int(EASI)] = 1
+                    EASI_rps = rps(EASI_pred_pmf, EASI_pmf)
+
                     res_crop.append({'filepath': x_path,
                                      'cra_pred': signs_pred[0].item(), 'dry_pred': signs_pred[1].item(),
                                      'ery_pred': signs_pred[2].item(), 'exc_pred': signs_pred[3].item(),
@@ -225,8 +248,11 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
                                      'TISS': TISS.item(), 'TISS_pred': TISS_pred.item(),
                                      'EASI': EASI.item(), 'EASI_pred': EASI_pred.item(),
                                      'SASSAD_ae': SASSAD_ae.item(), 'SASSAD_se': SASSAD_se.item(),
+                                     'SASSAD_rps': SASSAD_rps.item(),
                                      'TISS_ae': TISS_ae.item(), 'TISS_se': TISS_se.item(),
+                                     'TISS_rps': TISS_rps.item(),
                                      'EASI_ae': EASI_ae.item(), 'EASI_se': EASI_se.item(),
+                                     'EASI_rps': EASI_rps.item(),
                                      'k': k,
                                      })
 
@@ -271,6 +297,16 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
                     EASI_se = mean_squared_error(EASI_pred, EASI)
                     # EASI_rmse = torch.sqrt(EASI_mse)
 
+                    SASSAD_pmf = torch.zeros_like(SASSAD_pred_pmf)
+                    SASSAD_pmf[int(SASSAD)] = 1
+                    SASSAD_rps = rps(SASSAD_pred_pmf, SASSAD_pmf)
+                    TISS_pmf = torch.zeros_like(TISS_pred_pmf)
+                    TISS_pmf[int(TISS)] = 1
+                    TISS_rps = rps(TISS_pred_pmf, TISS_pmf)
+                    EASI_pmf = torch.zeros_like(EASI_pred_pmf)
+                    EASI_pmf[int(EASI)] = 1
+                    EASI_rps = rps(EASI_pred_pmf, EASI_pmf)
+
                     res.append({'filepath': x_path,
                                 'cra_pred': signs_pred[0].item(), 'dry_pred': signs_pred[1].item(),
                                 'ery_pred': signs_pred[2].item(), 'exc_pred': signs_pred[3].item(),
@@ -288,8 +324,11 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
                                 'TISS': TISS.item(), 'TISS_pred': TISS_pred.item(),
                                 'EASI': EASI.item(), 'EASI_pred': EASI_pred.item(),
                                 'SASSAD_ae': SASSAD_ae.item(), 'SASSAD_se': SASSAD_se.item(),
+                                'SASSAD_rps': SASSAD_rps.item(),
                                 'TISS_ae': TISS_ae.item(), 'TISS_se': TISS_se.item(),
+                                'TISS_rps': TISS_rps.item(),
                                 'EASI_ae': EASI_ae.item(), 'EASI_se': EASI_se.item(),
+                                'EASI_rps': EASI_rps.item(),
                                 'k': k,
                                 })
 
@@ -325,7 +364,10 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     if cfg.crop:
         csv_name = data_dir / f"pred_{cfg.seg_type}_{cfg.method}_crop_{cfg.net}_{cfg.perturbation}.csv"
     else:
-        csv_name = data_dir / f"pred_{cfg.seg_type}_{cfg.method}_{cfg.net}_{cfg.perturbation}.csv"
+        if cfg.method == 'seg':
+            csv_name = data_dir / f"pred_{cfg.seg_type}_{cfg.method}_{cfg.net}_{cfg.perturbation}_whole.csv"
+        else:
+            csv_name = data_dir / f"pred_{cfg.seg_type}_{cfg.method}_{cfg.net}_{cfg.perturbation}_raw.csv"
     res_csv.to_csv(csv_name, encoding='utf-8', index=False)
 
     if cfg.crop:

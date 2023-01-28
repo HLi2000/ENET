@@ -15,7 +15,7 @@ task_name: "eval_seg_TLA_skin_base"
 
 seg_type: "skin"
 
-auto_crop: True
+auto_crop: False
 
 perturbation: "base"
 

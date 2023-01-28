@@ -110,7 +110,10 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
                 for crop in crops:
                     crop_file_name = x_name.split(".")[0] + "_crop" + str(no) + ".jpg"
                     crop_file_dir = pathlib.Path(crop_dir, crop_file_name)
-                    plt.imsave(crop_file_dir, crop)
+                    try:
+                        plt.imsave(crop_file_dir, crop)
+                    except:
+                        continue
 
                     writer.writerow(
                         [score_file['refno'].get(index), score_file['visno'].get(index),
@@ -127,6 +130,56 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 
                     no += 1
                     print(f'{task.upper()}: {i}/{length} {crop_file_name} created')
+
+            if no == 0:
+                for id, box in enumerate(boxes['boxes']):
+                    if boxes['scores'][id] < 0.5:
+                        continue
+                    # crops = crop_square(img, box.cpu().numpy())
+                    crops = [crop_rect(img, box.cpu().numpy())]
+                    for crop in crops:
+                        crop_file_name = x_name.split(".")[0] + "_crop" + str(no) + ".jpg"
+                        crop_file_dir = pathlib.Path(crop_dir, crop_file_name)
+                        try:
+                            plt.imsave(crop_file_dir, crop)
+                        except:
+                            continue
+
+                        writer.writerow(
+                            [score_file['refno'].get(index), score_file['visno'].get(index),
+                             score_file['ethnic'].get(index),
+                             int(score_file['cra'].get(index)),
+                             int(score_file['dry'].get(index)),
+                             int(score_file['ery'].get(index)),
+                             int(score_file['exc'].get(index)),
+                             int(score_file['exu'].get(index)),
+                             int(score_file['lic'].get(index)),
+                             int(score_file['oed'].get(index)),
+                             x_name, crop_file_name, crop_file_dir, task,
+                             ])
+
+                        no += 1
+                        print(f'{task.upper()}: {i}/{length} {crop_file_name} created')
+            if no == 0:
+                crop_file_name = x_name.split(".")[0] + "_crop" + str(no) + ".jpg"
+                crop_file_dir = pathlib.Path(crop_dir, crop_file_name)
+                plt.imsave(crop_file_dir, img)
+
+                writer.writerow(
+                    [score_file['refno'].get(index), score_file['visno'].get(index),
+                     score_file['ethnic'].get(index),
+                     int(score_file['cra'].get(index)),
+                     int(score_file['dry'].get(index)),
+                     int(score_file['ery'].get(index)),
+                     int(score_file['exc'].get(index)),
+                     int(score_file['exu'].get(index)),
+                     int(score_file['lic'].get(index)),
+                     int(score_file['oed'].get(index)),
+                     x_name, crop_file_name, crop_file_dir, task,
+                     ])
+
+                no += 1
+                print(f'{task.upper()}: {i}/{length} {crop_file_name} created')
 
         csv_file.close()
     else:
@@ -163,7 +216,10 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
                 for crop in crops:
                     crop_file_name = x_name.split(".")[0] + "_crop" + str(no) + ".jpg"
                     crop_file_dir = pathlib.Path(crop_dir, crop_file_name)
-                    plt.imsave(crop_file_dir, crop)
+                    try:
+                        plt.imsave(crop_file_dir, crop)
+                    except:
+                        continue
 
                     writer1.writerow(
                         [score_file['refno'].get(index), score_file['visno'].get(index),
@@ -180,6 +236,56 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
 
                     no += 1
                     print(f'{task.upper()}: {i}/{length} {crop_file_name} created')
+
+            if no == 0:
+                for id, box in enumerate(boxes['boxes']):
+                    if boxes['scores'][id] < 0.5:
+                        continue
+                    # crops = crop_square(img, box.cpu().numpy())
+                    crops = [crop_rect(img, box.cpu().numpy())]
+                    for crop in crops:
+                        crop_file_name = x_name.split(".")[0] + "_crop" + str(no) + ".jpg"
+                        crop_file_dir = pathlib.Path(crop_dir, crop_file_name)
+                        try:
+                            plt.imsave(crop_file_dir, crop)
+                        except:
+                            continue
+
+                        writer1.writerow(
+                            [score_file['refno'].get(index), score_file['visno'].get(index),
+                             score_file['ethnic'].get(index),
+                             int(score_file['cra'].get(index)),
+                             int(score_file['dry'].get(index)),
+                             int(score_file['ery'].get(index)),
+                             int(score_file['exc'].get(index)),
+                             int(score_file['exu'].get(index)),
+                             int(score_file['lic'].get(index)),
+                             int(score_file['oed'].get(index)),
+                             x_name, crop_file_name, crop_file_dir, task,
+                             ])
+
+                        no += 1
+                        print(f'{task.upper()}: {i}/{length} {crop_file_name} created')
+            if no == 0:
+                crop_file_name = x_name.split(".")[0] + "_crop" + str(no) + ".jpg"
+                crop_file_dir = pathlib.Path(crop_dir, crop_file_name)
+                plt.imsave(crop_file_dir, img)
+
+                writer1.writerow(
+                    [score_file['refno'].get(index), score_file['visno'].get(index),
+                     score_file['ethnic'].get(index),
+                     int(score_file['cra'].get(index)),
+                     int(score_file['dry'].get(index)),
+                     int(score_file['ery'].get(index)),
+                     int(score_file['exc'].get(index)),
+                     int(score_file['exu'].get(index)),
+                     int(score_file['lic'].get(index)),
+                     int(score_file['oed'].get(index)),
+                     x_name, crop_file_name, crop_file_dir, task,
+                     ])
+
+                no += 1
+                print(f'{task.upper()}: {i}/{length} {crop_file_name} created')
 
             writer2.writerow(
                 [score_file['refno'].get(index), score_file['visno'].get(index),

@@ -1,5 +1,6 @@
 import torch
 from torchvision.models import MobileNet_V2_Weights, mobilenet_v2
+# from torchvision.models import EfficientNet_B0_Weights, efficientnet_b0
 
 
 class weightConstraint(object):
@@ -18,15 +19,41 @@ class Branch(torch.nn.Module):
     def __init__(self, in_channels, num_classes, dropout):
         super().__init__()
 
+        # self.classifier = torch.nn.Sequential(
+        #     torch.nn.Linear(in_channels, 512),
+        #     torch.nn.ReLU(),
+        #     torch.nn.Dropout(p=dropout),
+        #     torch.nn.Linear(512, 512),
+        #     torch.nn.ReLU(),
+        #     torch.nn.Dropout(p=dropout),
+        #     torch.nn.Linear(512, num_classes)
+        # )
+
+        # self.classifier = torch.nn.Sequential(
+        #     torch.nn.Linear(in_channels, 512),
+        #     torch.nn.ReLU(),
+        #     torch.nn.Linear(512, 512),
+        #     torch.nn.ReLU(),
+        #     torch.nn.Linear(512, num_classes)
+        # )
+
         self.classifier = torch.nn.Sequential(
             torch.nn.Linear(in_channels, 512),
             torch.nn.ReLU(),
             torch.nn.Dropout(p=dropout),
-            torch.nn.Linear(512, 512),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(p=dropout),
             torch.nn.Linear(512, num_classes)
         )
+
+        # self.classifier = torch.nn.Sequential(
+        #     torch.nn.Linear(in_channels, 512),
+        #     torch.nn.ReLU(),
+        #     torch.nn.Linear(512, num_classes)
+        # )
+
+        # self.classifier = torch.nn.Sequential(
+        #     torch.nn.Linear(in_channels, num_classes),
+        #     torch.nn.Dropout(p=dropout),
+        # )
 
     def forward(self, x):
         output = self.classifier(x)
@@ -34,7 +61,7 @@ class Branch(torch.nn.Module):
         return output
 
 # Regular PyTorch Module
-class EczemaNet(torch.nn.Module):
+class EczemaNet_New(torch.nn.Module):
     def __init__(self, num_classes, dropout, ordinal):
         super().__init__()
 
@@ -42,6 +69,7 @@ class EczemaNet(torch.nn.Module):
             num_classes = num_classes - 1
 
         self.base = mobilenet_v2(weights=MobileNet_V2_Weights.DEFAULT)
+        # self.base = efficientnet_b0(weights=EfficientNet_B0_Weights.DEFAULT)
 
         self.branch0 = Branch(1280, num_classes, dropout)
         self.branch1 = Branch(1280, num_classes, dropout)

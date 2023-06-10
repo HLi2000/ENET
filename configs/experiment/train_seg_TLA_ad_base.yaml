@@ -4,35 +4,25 @@
 # python train.py experiment=example
 
 defaults:
-  - override /datamodule: pred.yaml
-  - override /model: pred.yaml
+  - override /datamodule: seg.yaml
+  - override /model: seg.yaml
   - override /callbacks: default.yaml
   - override /trainer: default.yaml
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-task_name: "train_pred_SWET_skin_base_seg"
+task_name: "train_seg_TLA_ad_base"
 
-num_folds: 5
+seg_type: "ad"
 
-crop: True
-
-ordinal: True
-
-class_weighted: False
-
-method: 'seg'
-
-net: 'EN'
-
-seg_type: "skin"
+auto_crop: False
 
 perturbation: "base"
 
-dataset: "SWET"
+dataset: "TLA"
 
-tags: ["pred", "skin", "base", "SWET", "EczemaNet", 'crop']
+tags: ["seg", "ad", "base", "TLA", "UNet"]
 
 seed: 37
 
@@ -40,23 +30,16 @@ trainer:
   accelerator: gpu
   devices: 1
   min_epochs: 10
-  max_epochs: 50
-#  gradient_clip_val: 0.5
+  max_epochs: 20
+  gradient_clip_val: 0.5
 
 datamodule:
-#  batch_size: 32
+  batch_size: 2
   seg_type: ${seg_type}
-  crop: ${crop}
-  perturbation: ${perturbation}
-  ordinal: ${ordinal}
-  class_weighted: ${class_weighted}
-  method: ${method}
-  num_folds: ${num_folds}
-  k: 0
 
 model:
 #  optimizer:
-#    lr: 0.03
+#    lr: 0.001
 #    momentum: 0.9
 #    weight_decay: 0.005
   scheduler:
@@ -64,30 +47,24 @@ model:
     mode: max
     factor: 0.3
     patience: 5
-  model:
-    _target_: src.models.components.eczemanet.EczemaNet
-    num_classes: 4
-    dropout: 0.5
-  monitor: "val/R2"
-  n_classes: 4
-  ordinal: ${ordinal}
-  crop: ${crop}
+  monitor: "val/IoU"
+  auto_crop: ${auto_crop}
+  encoder_name: efficientnet_b3
 
 callbacks:
   model_checkpoint:
-    monitor: "val/R2"
+    monitor: "val/IoU"
     mode: "max"
     save_last: True
     auto_insert_metric_name: False
   early_stopping:
-    monitor: "val/R2"
+    monitor: "val/IoU"
     patience: 10
     mode: "max"
 
 logger:
   wandb:
     tags: ${tags}
-    project: "ENET_pred"
+    project: "ENET_seg"
     group: ${task_name}
     id: null # pass correct id to resume experiment!
-#    notes: train only on man crops

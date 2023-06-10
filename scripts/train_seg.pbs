@@ -6,4 +6,4 @@ module load anaconda3/personal
 source activate ENV
 cd $PBS_O_WORKDIR
 
-python src/train_seg.py logger=wandb experiment=train_seg_SWET_ad_base.yaml
+python src/train_seg.py logger=wandb experiment=train_seg_TLA_ad_base.yaml

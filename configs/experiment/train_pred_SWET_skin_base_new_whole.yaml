@@ -14,6 +14,8 @@ defaults:
 
 task_name: "train_pred_SWET_skin_base_new_whole"
 
+ratio: False
+
 num_folds: 5
 
 crop: False
@@ -46,7 +48,7 @@ trainer:
 #  gradient_clip_val: 0.5
 
 datamodule:
-  batch_size: 32
+#  batch_size: 32
   seg_type: ${seg_type}
   crop: ${crop}
   perturbation: ${perturbation}
@@ -57,9 +59,9 @@ datamodule:
   k: 0
 
 model:
-  optimizer:
-    lr: 0.03
-    momentum: 0.9
+#  optimizer:
+#    lr: 0.03
+#    momentum: 0.9
 #    weight_decay: 0.005
   scheduler:
     _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
@@ -70,6 +72,7 @@ model:
     _target_: src.models.components.eczemanet_new.EczemaNet_New
     num_classes: 4
     dropout: 0.5
+    ratio: ${ratio}
   monitor: "val/R2"
   n_classes: 4
   ordinal: ${ordinal}

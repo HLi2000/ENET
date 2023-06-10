@@ -14,6 +14,18 @@ from src.utils import pylogger, rich_utils
 
 log = pylogger.get_pylogger(__name__)
 
+def save_csv(csv, path, mode='w'):
+    path = Path(path)
+    if mode == 'w':
+        csv.to_csv(path, mode=mode, encoding='utf-8', index=False)
+    elif mode == 'x':
+        fp = path
+        num = 1
+        while fp.is_file():
+            fp = Path(str(path)[:-4] + str(num) + str(path)[-4:])
+            num += 1
+        csv.to_csv(fp, mode=mode, encoding='utf-8', index=False)
+
 class TestStore(Callback):
     def __init__(self):
         self.test_outputs = []

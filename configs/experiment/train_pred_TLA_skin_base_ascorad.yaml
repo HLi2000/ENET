@@ -14,13 +14,17 @@ defaults:
 
 task_name: "train_pred_TLA_skin_base_ascorad"
 
+num_folds: 5
+
 crop: False
 
-ordinal: True
+ordinal: False
 
 class_weighted: False
 
-method: 'ASCORAD'
+method: 'raw'
+
+net: 'ASCORAD'
 
 seg_type: "skin"
 
@@ -37,24 +41,26 @@ seed: 37
 trainer:
   accelerator: gpu
   devices: 1
-  min_epochs: 50
-  max_epochs: 100
-  gradient_clip_val: 0.5
+  min_epochs: 10
+  max_epochs: 50
+#  gradient_clip_val: 0.5
 
 datamodule:
-  batch_size: 32
+#  batch_size: 32
   seg_type: ${seg_type}
   crop: ${crop}
   perturbation: ${perturbation}
   ordinal: ${ordinal}
   class_weighted: ${class_weighted}
   method: ${method}
+  num_folds: ${num_folds}
+  k: 0
 
 model:
-  optimizer:
-    lr: 0.01
-    momentum: 0.9
-    weight_decay: 0.005
+#  optimizer:
+#    lr: 0.03
+#    momentum: 0.9
+#    weight_decay: 0.005
   scheduler:
     _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
     mode: max
@@ -76,7 +82,7 @@ callbacks:
     auto_insert_metric_name: False
   early_stopping:
     monitor: "val/R2"
-    patience: 20
+    patience: 10
     mode: "max"
 
 logger:

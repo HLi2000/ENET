@@ -12,7 +12,7 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-task_name: "train_pred_SWET_skin_base_ascorad"
+task_name: "train_pred_TLA_skin_base_ascorad_whole"
 
 num_folds: 5
 
@@ -22,7 +22,7 @@ ordinal: False
 
 class_weighted: False
 
-method: 'raw'
+method: 'seg'
 
 net: 'ASCORAD'
 
@@ -30,9 +30,9 @@ seg_type: "skin"
 
 perturbation: "base"
 
-dataset: "SWET"
+dataset: "TLA"
 
-tags: ["pred", "skin", "base", "SWET", "ASCORAD"]
+tags: ["pred", "skin", "base", "TLA", "ASCORAD", "whole"]
 
 seed: 37
 

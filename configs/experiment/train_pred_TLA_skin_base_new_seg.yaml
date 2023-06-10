@@ -12,31 +12,29 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-task_name: "train_pred_SWET_skin_base_ascorad"
+task_name: "train_pred_TLA_skin_base_new_seg"
 
 num_folds: 5
 
-crop: False
+crop: True
 
-ordinal: False
+ordinal: True
 
 class_weighted: False
 
-method: 'raw'
+method: 'seg'
 
-net: 'ASCORAD'
+net: 'EN_New'
 
 seg_type: "skin"
 
 perturbation: "base"
 
-dataset: "SWET"
+dataset: "TLA"
 
-tags: ["pred", "skin", "base", "SWET", "ASCORAD"]
+tags: ["pred", "skin", "base", "TLA", "EczemaNet_New", 'crop']
 
 seed: 37
-
-#ckpt_path: /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_SWET_skin_base/runs/2022-11-10_03-22-37/checkpoints/epoch_003.ckpt
 
 trainer:
   accelerator: gpu
@@ -67,8 +65,9 @@ model:
     factor: 0.3
     patience: 5
   model:
-    _target_: src.models.components.ascorad.ASCORAD
+    _target_: src.models.components.eczemanet_new.EczemaNet_New
     num_classes: 4
+    dropout: 0.5
   monitor: "val/R2"
   n_classes: 4
   ordinal: ${ordinal}
@@ -90,5 +89,5 @@ logger:
     tags: ${tags}
     project: "ENET_pred"
     group: ${task_name}
-#    id: 1j5xvjj3 # pass correct id to resume experiment!
+    id: null # pass correct id to resume experiment!
 #    notes: train only on man crops

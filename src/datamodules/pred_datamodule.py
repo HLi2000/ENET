@@ -76,10 +76,24 @@ class PredDataModule(LightningDataModule):
         # data transformations
         self.transforms_train = ComposeDouble([
             PredAlbumentationWrapper(albumentations=[
-                A.Resize(256, 256, always_apply=True),
-                # A.HorizontalFlip(p=0.5),
-                # A.VerticalFlip(p=0.5),
-                # A.RandomScale(p=0.5, scale_limit=0.5)
+                # A.Resize(256, 256, always_apply=True),
+                # A.LongestMaxSize(max_size=256),
+                # A.PadIfNeeded(min_height=256, min_width=256, border_mode=4, value=(0, 0, 0)),
+                A.LongestMaxSize(max_size=320),
+                A.PadIfNeeded(min_height=320, min_width=320, border_mode=0, value=(0, 0, 0)),
+
+                A.HorizontalFlip(p=0.5),
+                A.VerticalFlip(p=0.5),
+                A.Affine(scale=(0.75, 1.25), p=0.5),
+                A.Affine(rotate=(-90, 90), p=0.5),
+
+                A.GaussNoise(var_limit=(10.0, 50.0), p=0.5),
+                A.ISONoise(color_shift=(0.01, 0.05), p=0.5),
+                A.GaussianBlur(blur_limit=5, p=0.5),
+                A.MotionBlur(blur_limit=5, p=0.5),
+                A.RandomBrightness(limit=(-0.25, 0.25), p=0.5),
+                A.RandomContrast(limit=(-0.25, 0.25), p=0.5),
+                A.Downscale(scale_min=0.75, scale_max=0.95, interpolation=0, p=0.5)
             ]),
             FunctionWrapperDouble(np.moveaxis, source=-1, destination=0),
             FunctionWrapperDouble(normalize_01)
@@ -87,7 +101,11 @@ class PredDataModule(LightningDataModule):
 
         self.transforms_valid = ComposeDouble([
             PredAlbumentationWrapper(albumentations=[
-                A.Resize(256, 256, always_apply=True),
+                # A.Resize(256, 256, always_apply=True),
+                # A.LongestMaxSize(max_size=256),
+                # A.PadIfNeeded(min_height=256, min_width=256, border_mode=4, value=(0, 0, 0)),
+                A.LongestMaxSize(max_size=320),
+                A.PadIfNeeded(min_height=320, min_width=320, border_mode=0, value=(0, 0, 0)),
             ]),
             FunctionWrapperDouble(np.moveaxis, source=-1, destination=0),
             FunctionWrapperDouble(normalize_01)
@@ -95,7 +113,19 @@ class PredDataModule(LightningDataModule):
 
         self.transforms_test = ComposeDouble([
             PredAlbumentationWrapper(albumentations=[
-                A.Resize(256, 256, always_apply=True),
+                # A.Resize(256, 256, always_apply=True),
+                # A.LongestMaxSize(max_size=256),
+                # A.PadIfNeeded(min_height=256, min_width=256, border_mode=4, value=(0, 0, 0)),
+                A.LongestMaxSize(max_size=320),
+                A.PadIfNeeded(min_height=320, min_width=320, border_mode=0, value=(0, 0, 0)),
+
+                # A.GaussNoise(var_limit=(10.0, 50.0), p=1),
+                # A.ISONoise(color_shift=(0.01, 0.05), p=1),
+                # A.GaussianBlur(blur_limit=5, p=1),
+                # A.MotionBlur(blur_limit=5, p=1),
+                # A.RandomBrightness(limit=(-0.75, 0.75), p=1),
+                # A.RandomContrast(limit=(-0.75, 0.75), p=1),
+                # A.Downscale(scale_min=0.5, scale_max=0.75, interpolation=0, p=1),
             ]),
             FunctionWrapperDouble(np.moveaxis, source=-1, destination=0),
             FunctionWrapperDouble(normalize_01)

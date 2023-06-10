@@ -12,7 +12,7 @@ import pandas as pd
 import torch
 
 from src.utils.pred import convolve_many, rps
-from src.utils.utils import TestStore
+from src.utils.utils import TestStore, save_csv
 
 from typing import List, Optional, Tuple
 
@@ -368,13 +368,13 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
             csv_name = data_dir / f"pred_{cfg.seg_type}_{cfg.method}_{cfg.net}_{cfg.perturbation}_whole.csv"
         else:
             csv_name = data_dir / f"pred_{cfg.seg_type}_{cfg.method}_{cfg.net}_{cfg.perturbation}_raw.csv"
-    res_csv.to_csv(csv_name, encoding='utf-8', index=False)
+    save_csv(res_csv, csv_name, 'x')
 
     if cfg.crop:
         res_crop_csv = auto_csv.join(res_crop_pd, how="inner")
         res_crop_csv = res_crop_csv.reset_index(level=0).dropna()
         csv_crop_name = data_dir / f"pred_{cfg.seg_type}_{cfg.method}_crop_{cfg.net}_{cfg.perturbation}_crops.csv"
-        res_crop_csv.to_csv(csv_crop_name, encoding='utf-8', index=False)
+        save_csv(res_crop_csv, csv_crop_name, 'x')
 
     test_metrics = trainer.callback_metrics
 

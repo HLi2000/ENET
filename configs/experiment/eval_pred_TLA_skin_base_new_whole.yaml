@@ -1,0 +1,76 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /datamodule: pred.yaml
+  - override /model: pred.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+task_name: "eval_pred_TLA_skin_base_new_whole"
+
+ratio: False
+
+num_folds: 5
+
+crop: False
+
+ordinal: True
+
+class_weighted: False
+
+method: 'seg'
+
+net: 'EN_New'
+
+seg_type: "skin"
+
+perturbation: "base"
+
+dataset: "TLA"
+
+tags: ["pred", "skin", "base", "TLA", "EczemaNet_New", 'whole']
+
+seed: 37
+
+ckpt_path:
+#  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_TLA_skin_base_new_whole/runs/2023-03-01_16-12-36/checkpoints/epoch_015.ckpt
+#  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_TLA_skin_base_new_whole/runs/2023-03-01_16-12-36/checkpoints/epoch_013.ckpt
+#  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_TLA_skin_base_new_whole/runs/2023-03-01_16-12-36/checkpoints/epoch_001.ckpt
+#  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_TLA_skin_base_new_whole/runs/2023-03-01_16-12-36/checkpoints/epoch_016.ckpt
+#  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_TLA_skin_base_new_whole/runs/2023-03-01_16-12-36/checkpoints/epoch_018.ckpt
+
+  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_TLA_skin_base_new_whole/runs/2023-05-29_17-10-58/checkpoints/epoch_023.ckpt
+  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_TLA_skin_base_new_whole/runs/2023-05-29_17-10-58/checkpoints/epoch_047.ckpt
+  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_TLA_skin_base_new_whole/runs/2023-05-29_17-10-58/checkpoints/epoch_001.ckpt
+  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_TLA_skin_base_new_whole/runs/2023-05-29_17-10-58/checkpoints/epoch_030.ckpt
+  - /rds/general/user/hl3719/home/projects/ENET/logs/train_pred_TLA_skin_base_new_whole/runs/2023-05-29_17-10-58/checkpoints/epoch_028.ckpt
+
+trainer:
+  accelerator: cpu
+  devices: 1
+
+datamodule:
+  batch_size: 1
+  seg_type: ${seg_type}
+  crop: ${crop}
+  perturbation: ${perturbation}
+  ordinal: ${ordinal}
+  class_weighted: ${class_weighted}
+  method: ${method}
+  num_folds: ${num_folds}
+  k: 0
+
+model:
+  model:
+    _target_: src.models.components.eczemanet_new.EczemaNet_New
+    num_classes: 4
+    dropout: 0.5
+    ratio: ${ratio}
+  n_classes: 4
+  ordinal: ${ordinal}
+  crop: ${crop}

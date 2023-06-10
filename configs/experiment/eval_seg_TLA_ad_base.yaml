@@ -1,0 +1,42 @@
+# @package _global_
+
+# to execute this experiment run:
+# python train.py experiment=example
+
+defaults:
+  - override /datamodule: seg.yaml
+  - override /model: seg.yaml
+  - override /trainer: default.yaml
+
+# all parameters below will be merged with parameters from default configurations set above
+# this allows you to overwrite only specified parameters
+
+task_name: "eval_seg_TLA_ad_base"
+
+seg_type: "ad"
+
+auto_crop: False
+
+perturbation: "base"
+
+dataset: "TLA"
+
+tags: ["seg", "ad", "base", "TLA", "UNet"]
+
+seed: 37
+
+ckpt_path: /rds/general/user/hl3719/home/projects/ENET/logs/train_seg_TLA_ad_base/runs/2023-03-16_01-03-15/checkpoints/epoch_019.ckpt
+
+trainer:
+  accelerator: gpu
+  devices: 1
+
+datamodule:
+  batch_size: 1
+  seg_type: ${seg_type}
+  auto_crop: ${auto_crop}
+
+model:
+  auto_crop: ${auto_crop}
+  encoder_name: 'efficientnet-b3'
+

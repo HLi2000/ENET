@@ -46,7 +46,7 @@ trainer:
 #  gradient_clip_val: 0.5
 
 datamodule:
-  batch_size: 32
+#  batch_size: 32
   seg_type: ${seg_type}
   crop: ${crop}
   perturbation: ${perturbation}
@@ -57,9 +57,9 @@ datamodule:
   k: 0
 
 model:
-  optimizer:
-    lr: 0.03
-    momentum: 0.9
+#  optimizer:
+#    lr: 0.03
+#    momentum: 0.9
 #    weight_decay: 0.005
   scheduler:
     _target_: torch.optim.lr_scheduler.ReduceLROnPlateau

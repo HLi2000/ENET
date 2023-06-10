@@ -1,6 +1,7 @@
 import pathlib
 from typing import Any, Dict, Optional, Tuple
 
+import pandas as pd
 import torch
 import numpy as np
 import albumentations as A
@@ -67,7 +68,9 @@ class SegDataModule(LightningDataModule):
         # %% transformations and augmentations
         self.transforms_train = ComposeDouble([
             SegAlbumentationWrapper(albumentations=[
-                A.Resize(1024, 768, always_apply=True),
+                # A.Resize(1024, 768, always_apply=True),
+                A.LongestMaxSize(max_size=1024),
+                A.PadIfNeeded(min_height=1024, min_width=1024, border_mode=0, value=(0, 0, 0)),
                 # A.HorizontalFlip(p=0.5),
                 # A.VerticalFlip(p=0.5),
                 # A.RandomScale(p=0.5, scale_limit=0.5)
@@ -78,7 +81,9 @@ class SegDataModule(LightningDataModule):
 
         self.transforms_val = ComposeDouble([
             SegAlbumentationWrapper(albumentations=[
-                A.Resize(1024, 768, always_apply=True),
+                # A.Resize(1024, 768, always_apply=True),
+                A.LongestMaxSize(max_size=1024),
+                A.PadIfNeeded(min_height=1024, min_width=1024, border_mode=0, value=(0, 0, 0)),
             ]),
             FunctionWrapperDouble(np.moveaxis, source=-1, destination=0, target=True),
             FunctionWrapperDouble(normalize_01)
@@ -86,7 +91,9 @@ class SegDataModule(LightningDataModule):
 
         self.transforms_test = ComposeDouble([
             SegAlbumentationWrapper(albumentations=[
-                A.Resize(1024, 768, always_apply=True),
+                # A.Resize(1024, 768, always_apply=True),
+                A.LongestMaxSize(max_size=1024),
+                A.PadIfNeeded(min_height=1024, min_width=1024, border_mode=0, value=(0, 0, 0)),
             ]),
             FunctionWrapperDouble(np.moveaxis, source=-1, destination=0, target=True),
             FunctionWrapperDouble(normalize_01)
@@ -96,6 +103,7 @@ class SegDataModule(LightningDataModule):
         self.dataset_train: Optional[Dataset] = None
         self.dataset_val: Optional[Dataset] = None
         self.dataset_test: Optional[Dataset] = None
+        self.seg_type = seg_type
 
     @property
     def num_classes(self):
@@ -116,30 +124,90 @@ class SegDataModule(LightningDataModule):
         """
         # Assign train/val datasets for use in dataloaders
         if stage == 'fit' or stage is None:
-            inputs_train_dir = self.data_dir / 'train' / "reals"
-            targets_train_dir = self.data_dir / 'train' / "labels"
-            inputs_train = get_filenames_of_path(inputs_train_dir)
-            targets_train = get_filenames_of_path(targets_train_dir)
-            inputs_train.sort()
-            targets_train.sort()
+            if self.data_dir.stem == 'TLA' and self.seg_type == 'ad':
+                data_dir = self.data_dir.parent / 'SWET'
+
+                inputs_train_dir = data_dir / 'train' / "reals"
+                targets_train_dir = data_dir / 'train' / "labels"
+                inputs_train = get_filenames_of_path(inputs_train_dir)
+                targets_train = get_filenames_of_path(targets_train_dir)
+                inputs_train.sort()
+                targets_train.sort()
+
+                inputs_val_dir = data_dir / 'valid' / "reals"
+                targets_val_dir = data_dir / 'valid' / "labels"
+                inputs_val = get_filenames_of_path(inputs_val_dir)
+                targets_val = get_filenames_of_path(targets_val_dir)
+                inputs_val.sort()
+                targets_val.sort()
+
+                inputs_test_dir = data_dir / 'test' / "reals"
+                targets_test_dir = data_dir / 'test' / "labels"
+                inputs_test = get_filenames_of_path(inputs_test_dir)
+                targets_test = get_filenames_of_path(targets_test_dir)
+                inputs_test.sort()
+                targets_test.sort()
+
+                inputs_train = inputs_train + inputs_val + inputs_test
+                targets_train = targets_train + targets_val + targets_test
+                inputs_train_dir = str(inputs_train_dir) + ' and ' + str(inputs_val_dir) + ' and ' + str(inputs_test_dir)
+                targets_train_dir = str(targets_train_dir) + ' and ' + str(targets_val_dir) + ' and ' + str(targets_test_dir)
+
+                inputs_val = inputs_train
+                targets_val = targets_train
+
+                # inputs_train = inputs_train + inputs_val
+                # targets_train = targets_train + targets_val
+                # inputs_train_dir = str(inputs_train_dir) + ' and ' + str(inputs_val_dir)
+                # targets_train_dir = str(targets_train_dir) + ' and ' + str(targets_val_dir)
+
+                # inputs_val = inputs_test
+                # targets_val = targets_test
+                # inputs_val_dir = inputs_test_dir
+                # targets_val_dir = targets_test_dir
+
+
+                meta_csv_dir = data_dir / f"metadata_ratio.csv"
+                meta_csv = pd.read_csv(meta_csv_dir)
+
+                inputs_train_str = [p.as_posix() for p in inputs_train]
+                ind = meta_csv.index[meta_csv['filepath'] == inputs_train_str].tolist()
+                ad_skin = meta_csv['ad_skin'].iloc[ind]
+                ad_skin = np.array([val for val in ad_skin])
+                inputs_train = np.array(inputs_train)
+                targets_train = np.array(targets_train)
+                inputs_train = inputs_train[ad_skin < 30].tolist()
+                targets_train = targets_train[ad_skin < 30].tolist()
+
+                inputs_val = inputs_train
+                targets_val = targets_train
+
+            else:
+                inputs_train_dir = self.data_dir / 'train' / "reals"
+                targets_train_dir = self.data_dir / 'train' / "labels"
+                inputs_train = get_filenames_of_path(inputs_train_dir)
+                targets_train = get_filenames_of_path(targets_train_dir)
+                inputs_train.sort()
+                targets_train.sort()
+
+                inputs_val_dir = self.data_dir / 'valid' / "reals"
+                targets_val_dir = self.data_dir / 'valid' / "labels"
+                inputs_val = get_filenames_of_path(inputs_val_dir)
+                targets_val = get_filenames_of_path(targets_val_dir)
+                inputs_val.sort()
+                targets_val.sort()
+
             if inputs_train:
                 log.info(f'{len(inputs_train)} images loaded from {inputs_train_dir}')
                 log.info(f'{len(targets_train)} masks loaded from {targets_train_dir}')
             else:
                 raise ValueError('Wrong path!')
 
-            inputs_val_dir = self.data_dir / 'valid' / "reals"
-            targets_val_dir = self.data_dir / 'valid' / "labels"
-            inputs_val = get_filenames_of_path(inputs_val_dir)
-            targets_val = get_filenames_of_path(targets_val_dir)
-            inputs_val.sort()
-            targets_val.sort()
             if inputs_val:
                 log.info(f'{len(inputs_val)} images loaded from {inputs_val_dir}')
                 log.info(f'{len(targets_val)} masks loaded from {targets_val_dir}')
             else:
                 raise ValueError('Wrong path!')
-
 
             self.dataset_train = SegDataSet(inputs=inputs_train,
                                             targets=targets_train,
@@ -153,7 +221,36 @@ class SegDataModule(LightningDataModule):
 
         # Assign test dataset for use in dataloader(s)
         if stage == 'test' or stage is None:
-            if self.hparams.auto_crop:
+            if self.data_dir.stem == 'TLA' and self.seg_type == 'ad':
+                inputs_train_dir = self.data_dir / 'train' / "reals"
+                targets_train_dir = self.data_dir / 'train' / "labels"
+                inputs_train = get_filenames_of_path(inputs_train_dir)
+                targets_train = get_filenames_of_path(targets_train_dir)
+                inputs_train.sort()
+                targets_train.sort()
+
+                inputs_val_dir = self.data_dir / 'valid' / "reals"
+                targets_val_dir = self.data_dir / 'valid' / "labels"
+                inputs_val = get_filenames_of_path(inputs_val_dir)
+                targets_val = get_filenames_of_path(targets_val_dir)
+                inputs_val.sort()
+                targets_val.sort()
+
+                inputs_test_dir = self.data_dir / 'test' / "reals"
+                targets_test_dir = self.data_dir / 'test' / "labels"
+                inputs_test = get_filenames_of_path(inputs_test_dir)
+                targets_test = get_filenames_of_path(targets_test_dir)
+                inputs_test.sort()
+                targets_test.sort()
+
+                inputs_test = inputs_train + inputs_val + inputs_test
+                targets_test = targets_train + targets_val + targets_test
+                inputs_test_dir = str(inputs_train_dir) + ' and ' + str(inputs_train_dir) + ' and ' + str(
+                    inputs_test_dir)
+                targets_test_dir = str(targets_val_dir) + ' and ' + str(targets_val_dir) + ' and ' + str(
+                    targets_test_dir)
+
+            elif self.hparams.auto_crop:
                 inputs_train_dir = self.data_dir / 'train' / "reals"
                 targets_train_dir = self.data_dir / 'train' / "labels"
                 inputs_train = get_filenames_of_path(inputs_train_dir)

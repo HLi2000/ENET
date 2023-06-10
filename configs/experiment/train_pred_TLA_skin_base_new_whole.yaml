@@ -12,27 +12,29 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-task_name: "train_pred_SWET_skin_base_ascorad"
+task_name: "train_pred_TLA_skin_base_new_whole"
+
+ratio: False
 
 num_folds: 5
 
 crop: False
 
-ordinal: False
+ordinal: True
 
 class_weighted: False
 
-method: 'raw'
+method: 'seg'
 
-net: 'ASCORAD'
+net: 'EN_New'
 
 seg_type: "skin"
 
 perturbation: "base"
 
-dataset: "SWET"
+dataset: "TLA"
 
-tags: ["pred", "skin", "base", "SWET", "ASCORAD"]
+tags: ["pred", "skin", "base", "TLA", "EczemaNet_New", 'whole']
 
 seed: 37
 
@@ -67,8 +69,10 @@ model:
     factor: 0.3
     patience: 5
   model:
-    _target_: src.models.components.ascorad.ASCORAD
+    _target_: src.models.components.eczemanet_new.EczemaNet_New
     num_classes: 4
+    dropout: 0.5
+    ratio: ${ratio}
   monitor: "val/R2"
   n_classes: 4
   ordinal: ${ordinal}

@@ -116,6 +116,12 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
     score_file = pd.read_csv(score_dir)
 
     if cfg.auto_crop:
+        csv_dir0 = pathlib.Path(cfg.data_dir, cfg.dataset, f'metadata_{cfg.seg_type}_seg_whole_{cfg.perturbation}.csv')
+        csv_file0 = open(csv_dir0, 'w', newline='')
+        writer0 = csv.writer(csv_file0)
+        writer0.writerow(['refno', 'visno', 'ethnic', 'cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed',
+                          'filename', 'crop', 'filepath', 'task'])
+
         csv_dir = pathlib.Path(cfg.data_dir, cfg.dataset, f'metadata_{cfg.seg_type}_seg_crop_{cfg.perturbation}.csv')
         csv_file = open(csv_dir, 'w', newline='')
         writer = csv.writer(csv_file)
@@ -130,6 +136,27 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
             task = score_file['task'].get(index)
 
             img = np.moveaxis(re_normalize(x), source=0, destination=-1)
+
+            img_dir = pathlib.Path(cfg.data_dir, cfg.dataset, task, f"seg_{cfg.seg_type}_whole_{cfg.perturbation}")
+            img_dir.mkdir(parents=True, exist_ok=True)
+            img_file_name = x_name.split(".")[0] + "_whole" + ".jpg"
+            img_file_dir = pathlib.Path(img_dir, img_file_name)
+            plt.imsave(img_file_dir, img)
+
+            writer0.writerow(
+                [score_file['refno'].get(index), score_file['visno'].get(index),
+                 score_file['ethnic'].get(index),
+                 int(score_file['cra'].get(index)),
+                 int(score_file['dry'].get(index)),
+                 int(score_file['ery'].get(index)),
+                 int(score_file['exc'].get(index)),
+                 int(score_file['exu'].get(index)),
+                 int(score_file['lic'].get(index)),
+                 int(score_file['oed'].get(index)),
+                 x_name, img_file_name, img_file_dir, task,
+                 ])
+
+            print(f'{task.upper()}: {i}/{length} {img_file_name} created')
 
             crop_dir = pathlib.Path(cfg.data_dir, cfg.dataset, task, f"seg_{cfg.seg_type}_crops_{cfg.perturbation}")
             crop_dir.mkdir(parents=True, exist_ok=True)
@@ -160,6 +187,13 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
 
         csv_file.close()
     else:
+        csv_dir0 = pathlib.Path(cfg.data_dir, cfg.dataset,
+                                f'metadata_{cfg.seg_type}_seg_pred_whole_{cfg.perturbation}.csv')
+        csv_file0 = open(csv_dir0, 'w', newline='')
+        writer0 = csv.writer(csv_file0)
+        writer0.writerow(['refno', 'visno', 'ethnic', 'cra', 'dry', 'ery', 'exc', 'exu', 'lic', 'oed',
+                          'filename', 'crop', 'filepath', 'task'])
+
         csv_dir1 = pathlib.Path(cfg.data_dir, cfg.dataset, f'metadata_{cfg.seg_type}_seg_pred_{cfg.perturbation}.csv')
         csv_file1 = open(csv_dir1, 'w', newline='')
         writer1 = csv.writer(csv_file1)
@@ -180,6 +214,27 @@ def train(cfg: DictConfig) -> Tuple[dict, dict]:
             task = score_file['task'].get(index)
 
             img = np.moveaxis(re_normalize(x), source=0, destination=-1)
+
+            img_dir = pathlib.Path(cfg.data_dir, cfg.dataset, task, f"seg_{cfg.seg_type}_whole_{cfg.perturbation}")
+            img_dir.mkdir(parents=True, exist_ok=True)
+            img_file_name = x_name.split(".")[0] + "_whole" + ".jpg"
+            img_file_dir = pathlib.Path(img_dir, img_file_name)
+            plt.imsave(img_file_dir, img)
+
+            writer0.writerow(
+                [score_file['refno'].get(index), score_file['visno'].get(index),
+                 score_file['ethnic'].get(index),
+                 int(score_file['cra'].get(index)),
+                 int(score_file['dry'].get(index)),
+                 int(score_file['ery'].get(index)),
+                 int(score_file['exc'].get(index)),
+                 int(score_file['exu'].get(index)),
+                 int(score_file['lic'].get(index)),
+                 int(score_file['oed'].get(index)),
+                 x_name, img_file_name, img_file_dir, task,
+                 ])
+
+            print(f'{task.upper()}: {i}/{length} {img_file_name} created')
 
             crop_dir = pathlib.Path(cfg.data_dir, cfg.dataset, task, f"seg_{cfg.seg_type}_crops_{cfg.perturbation}")
             crop_dir.mkdir(parents=True, exist_ok=True)

@@ -1,5 +1,9 @@
+import random
+
 import torch
 import pathlib
+
+from matplotlib import pyplot as plt
 # import matplotlib.pyplot as plt
 from skimage.io import imread
 from typing import List, Dict
@@ -43,6 +47,8 @@ class PredDataSet(torch.utils.data.Dataset):
 
         if self.transform is not None:
             x, target = self.transform(x, target)  # returns np.ndarray
+
+        # plt.imsave(f'x_{random.randint(0, 10000)}.jpg', x.T)
 
         # Typecasting
         x = torch.from_numpy(x).type(torch.float32)

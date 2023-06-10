@@ -11,9 +11,8 @@ root = pyrootutils.setup_root(
 import pandas as pd
 import torch
 
-from src.utils.pred import convolve_many
-from src.utils.utils import TestStore
-
+from src.utils.pred import convolve_many, rps
+from src.utils.utils import TestStore, save_csv
 
 from typing import List, Optional, Tuple
 
@@ -133,27 +132,40 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
                 EASI_se = mean_squared_error(EASI_pred, EASI)
                 # EASI_rmse = torch.sqrt(EASI_mse)
 
-                res.append({'filepath': x_path,
-                            'cra_pred': signs_pred[0].item(), 'dry_pred': signs_pred[1].item(),
-                            'ery_pred': signs_pred[2].item(), 'exc_pred': signs_pred[3].item(),
-                            'exu_pred': signs_pred[4].item(), 'lic_pred': signs_pred[5].item(),
-                            'oed_pred': signs_pred[6].item(),
-                            'cra_ae': signs_ae[0].item(), 'dry_ae': signs_ae[1].item(),
-                            'ery_ae': signs_ae[2].item(), 'exc_ae': signs_ae[3].item(),
-                            'exu_ae': signs_ae[4].item(), 'lic_ae': signs_ae[5].item(),
-                            'oed_ae': signs_ae[6].item(),
-                            'cra_se': signs_se[0].item(), 'dry_se': signs_se[1].item(),
-                            'ery_se': signs_se[2].item(), 'exc_se': signs_se[3].item(),
-                            'exu_se': signs_se[4].item(), 'lic_se': signs_se[5].item(),
-                            'oed_se': signs_se[6].item(),
-                            'SASSAD': SASSAD.item(), 'SASSAD_pred': SASSAD_pred.item(),
-                            'TISS': TISS.item(), 'TISS_pred': TISS_pred.item(),
-                            'EASI': EASI.item(), 'EASI_pred': EASI_pred.item(),
-                            'SASSAD_ae': SASSAD_ae.item(), 'SASSAD_se': SASSAD_se.item(),
-                            'TISS_ae': TISS_ae.item(), 'TISS_se': TISS_se.item(),
-                            'EASI_ae': EASI_ae.item(), 'EASI_se': EASI_se.item(),
-                            'k': k,
-                            })
+                SASSAD_pmf = torch.zeros_like(SASSAD_pred_pmf)
+                SASSAD_pmf[int(SASSAD)] = 1
+                SASSAD_rps = rps(SASSAD_pred_pmf, SASSAD_pmf)
+                TISS_pmf = torch.zeros_like(TISS_pred_pmf)
+                TISS_pmf[int(TISS)] = 1
+                TISS_rps = rps(TISS_pred_pmf, TISS_pmf)
+                EASI_pmf = torch.zeros_like(EASI_pred_pmf)
+                EASI_pmf[int(EASI)] = 1
+                EASI_rps = rps(EASI_pred_pmf, EASI_pmf)
+
+            res.append({'filepath': x_path,
+                        'cra_pred': signs_pred[0].item(), 'dry_pred': signs_pred[1].item(),
+                        'ery_pred': signs_pred[2].item(), 'exc_pred': signs_pred[3].item(),
+                        'exu_pred': signs_pred[4].item(), 'lic_pred': signs_pred[5].item(),
+                        'oed_pred': signs_pred[6].item(),
+                        'cra_ae': signs_ae[0].item(), 'dry_ae': signs_ae[1].item(),
+                        'ery_ae': signs_ae[2].item(), 'exc_ae': signs_ae[3].item(),
+                        'exu_ae': signs_ae[4].item(), 'lic_ae': signs_ae[5].item(),
+                        'oed_ae': signs_ae[6].item(),
+                        'cra_se': signs_se[0].item(), 'dry_se': signs_se[1].item(),
+                        'ery_se': signs_se[2].item(), 'exc_se': signs_se[3].item(),
+                        'exu_se': signs_se[4].item(), 'lic_se': signs_se[5].item(),
+                        'oed_se': signs_se[6].item(),
+                        'SASSAD': SASSAD.item(), 'SASSAD_pred': SASSAD_pred.item(),
+                        'TISS': TISS.item(), 'TISS_pred': TISS_pred.item(),
+                        'EASI': EASI.item(), 'EASI_pred': EASI_pred.item(),
+                        'SASSAD_ae': SASSAD_ae.item(), 'SASSAD_se': SASSAD_se.item(),
+                        'SASSAD_rps': SASSAD_rps.item(),
+                        'TISS_ae': TISS_ae.item(), 'TISS_se': TISS_se.item(),
+                        'TISS_rps': TISS_rps.item(),
+                        'EASI_ae': EASI_ae.item(), 'EASI_se': EASI_se.item(),
+                        'EASI_rps': EASI_rps.item(),
+                        'k': k,
+                        })
 
             for out in outputs:
                 x_path = out['x_path']
@@ -192,6 +204,16 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
                 EASI_se = mean_squared_error(EASI_pred, EASI)
                 # EASI_rmse = torch.sqrt(EASI_mse)
 
+                SASSAD_pmf = torch.zeros_like(SASSAD_pred_pmf)
+                SASSAD_pmf[int(SASSAD)] = 1
+                SASSAD_rps = rps(SASSAD_pred_pmf, SASSAD_pmf)
+                TISS_pmf = torch.zeros_like(TISS_pred_pmf)
+                TISS_pmf[int(TISS)] = 1
+                TISS_rps = rps(TISS_pred_pmf, TISS_pmf)
+                EASI_pmf = torch.zeros_like(EASI_pred_pmf)
+                EASI_pmf[int(EASI)] = 1
+                EASI_rps = rps(EASI_pred_pmf, EASI_pmf)
+
                 res_crop.append({'filepath': x_path,
                                  'cra_pred': signs_pred[0].item(), 'dry_pred': signs_pred[1].item(),
                                  'ery_pred': signs_pred[2].item(), 'exc_pred': signs_pred[3].item(),
@@ -209,8 +231,11 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
                                  'TISS': TISS.item(), 'TISS_pred': TISS_pred.item(),
                                  'EASI': EASI.item(), 'EASI_pred': EASI_pred.item(),
                                  'SASSAD_ae': SASSAD_ae.item(), 'SASSAD_se': SASSAD_se.item(),
+                                 'SASSAD_rps': SASSAD_rps.item(),
                                  'TISS_ae': TISS_ae.item(), 'TISS_se': TISS_se.item(),
+                                 'TISS_rps': TISS_rps.item(),
                                  'EASI_ae': EASI_ae.item(), 'EASI_se': EASI_se.item(),
+                                 'EASI_rps': EASI_rps.item(),
                                  'k': k,
                                  })
 
@@ -255,6 +280,16 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
                 EASI_se = mean_squared_error(EASI_pred, EASI)
                 # EASI_rmse = torch.sqrt(EASI_mse)
 
+                SASSAD_pmf = torch.zeros_like(SASSAD_pred_pmf)
+                SASSAD_pmf[int(SASSAD)] = 1
+                SASSAD_rps = rps(SASSAD_pred_pmf, SASSAD_pmf)
+                TISS_pmf = torch.zeros_like(TISS_pred_pmf)
+                TISS_pmf[int(TISS)] = 1
+                TISS_rps = rps(TISS_pred_pmf, TISS_pmf)
+                EASI_pmf = torch.zeros_like(EASI_pred_pmf)
+                EASI_pmf[int(EASI)] = 1
+                EASI_rps = rps(EASI_pred_pmf, EASI_pmf)
+
                 res.append({'filepath': x_path,
                             'cra_pred': signs_pred[0].item(), 'dry_pred': signs_pred[1].item(),
                             'ery_pred': signs_pred[2].item(), 'exc_pred': signs_pred[3].item(),
@@ -272,8 +307,11 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
                             'TISS': TISS.item(), 'TISS_pred': TISS_pred.item(),
                             'EASI': EASI.item(), 'EASI_pred': EASI_pred.item(),
                             'SASSAD_ae': SASSAD_ae.item(), 'SASSAD_se': SASSAD_se.item(),
+                            'SASSAD_rps': SASSAD_rps.item(),
                             'TISS_ae': TISS_ae.item(), 'TISS_se': TISS_se.item(),
+                            'TISS_rps': TISS_rps.item(),
                             'EASI_ae': EASI_ae.item(), 'EASI_se': EASI_se.item(),
+                            'EASI_rps': EASI_rps.item(),
                             'k': k,
                             })
 
@@ -309,14 +347,17 @@ def evaluate(cfg: DictConfig) -> Tuple[dict, dict]:
     if cfg.crop:
         csv_name = data_dir / f"pred_{cfg.seg_type}_{cfg.method}_crop_{cfg.net}_{cfg.perturbation}.csv"
     else:
-        csv_name = data_dir / f"pred_{cfg.seg_type}_{cfg.method}_{cfg.net}_{cfg.perturbation}.csv"
-    res_csv.to_csv(csv_name, encoding='utf-8', index=False)
+        if cfg.method == 'seg':
+            csv_name = data_dir / f"pred_{cfg.seg_type}_{cfg.method}_{cfg.net}_{cfg.perturbation}_whole.csv"
+        else:
+            csv_name = data_dir / f"pred_{cfg.seg_type}_{cfg.method}_{cfg.net}_{cfg.perturbation}_raw.csv"
+    save_csv(res_csv, csv_name, 'x')
 
     if cfg.crop:
         res_crop_csv = auto_csv.join(res_crop_pd, how="inner")
         res_crop_csv = res_crop_csv.reset_index(level=0).dropna()
         csv_crop_name = data_dir / f"pred_{cfg.seg_type}_{cfg.method}_crop_{cfg.net}_{cfg.perturbation}_crops.csv"
-        res_crop_csv.to_csv(csv_crop_name, encoding='utf-8', index=False)
+        save_csv(res_crop_csv, csv_crop_name, 'x')
 
 
     metric_dict = trainer.callback_metrics

@@ -36,7 +36,7 @@ class PredModule(LightningModule):
         n_classes: int = 4,
         crop: bool = True,
         class_weights = None,
-        net: str = 'EN'
+        net: str = 'EN',
     ):
         super().__init__()
 

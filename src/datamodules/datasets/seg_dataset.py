@@ -1,3 +1,7 @@
+"""
+Dataset of segmentation network
+"""
+
 import cv2
 import torch
 import pathlib

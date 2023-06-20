@@ -1,3 +1,7 @@
+"""
+Dataset of ROI network
+"""
+
 import torch
 import pathlib
 import matplotlib.pyplot as plt

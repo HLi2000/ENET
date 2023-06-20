@@ -1,21 +1,12 @@
 import torch
 from torchvision.models import MobileNet_V2_Weights, mobilenet_v2
+"""
+Improved EczemaNet's prediction model
+"""
+
 from src.models.components.pyramidpooling import SpatialPyramidPooling
 
-
 # from torchvision.models import EfficientNet_B0_Weights, efficientnet_b0
-
-
-class weightConstraint(object):
-    def __init__(self):
-        pass
-
-    def __call__(self, module):
-        if hasattr(module, 'weight'):
-            print("Constrained")
-            w = module.weight.data
-            w = w.clamp(-3.0, 3.0)
-            module.weight.data = w
 
 class Branch(torch.nn.Module):
 
@@ -47,6 +38,7 @@ class Branch(torch.nn.Module):
         #     torch.nn.Linear(512, num_classes)
         # )
 
+        ## 2FC (-Dropout)
         self.classifier = torch.nn.Sequential(
             torch.nn.Linear(in_channels, 512),
             torch.nn.ReLU(),
@@ -94,6 +86,7 @@ class EczemaNet_New(torch.nn.Module):
         self.activation = torch.nn.Sigmoid()
 
     def forward(self, x):
+        ## Skin/Whole ratio
         if self.ratio is True:
             ratio = torch.sum(torch.sum(x, 1) > 0, dim=(1, 2)) / (x.shape[2]*x.shape[3])
             ratio = torch.unsqueeze(ratio, 1)
@@ -109,9 +102,10 @@ class EczemaNet_New(torch.nn.Module):
         # x = self.spp(x)
         # print(x.size())
 
+        ## add Skin/Whole ratio
         if self.ratio is True:
             x = torch.concat([x, ratio], 1)
-            print(x[0])
+            # print(x[0])
             # print(x.shape)
 
         x0 = self.activation(self.branch0(x))

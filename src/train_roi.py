@@ -1,15 +1,9 @@
-import pyrootutils
-import os
-import pathlib
+"""
+To train and test the ROI network and save crops and corresponding metadata
+"""
 
-# root = pathlib.Path(os.path.abspath(''))
-# pyrootutils.set_root(
-#     path=root, # path to the root directory
-#     project_root_env_var=True, # set the PROJECT_ROOT environment variable to root directory
-#     dotenv=True, # load environment variables from .env if exists in root directory
-#     pythonpath=True, # add root directory to the PYTHONPATH (helps with imports)
-#     cwd=True, # change current working directory to the root directory (helps with filepaths)
-# )
+import pyrootutils
+import pathlib
 
 root = pyrootutils.setup_root(
     search_from=__file__,

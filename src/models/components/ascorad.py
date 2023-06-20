@@ -1,3 +1,7 @@
+"""
+ASCORAD's prediction model
+"""
+
 import torch
 from torchvision.models import EfficientNet_B0_Weights, efficientnet_b0
 

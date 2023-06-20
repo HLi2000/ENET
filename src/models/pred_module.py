@@ -1,3 +1,7 @@
+"""
+Module that import and train/test the model with chosen metrics
+"""
+
 import pathlib
 from typing import Any, List
 
@@ -45,23 +49,7 @@ class PredModule(LightningModule):
         self.save_hyperparameters(logger=False, ignore=["model"])
 
         self.model = model
-        if net == 'EN':
-            constraints = weightConstraint()
-            model._modules['branch0'].apply(constraints)
-            model._modules['branch1'].apply(constraints)
-            model._modules['branch2'].apply(constraints)
-            model._modules['branch3'].apply(constraints)
-            model._modules['branch4'].apply(constraints)
-            model._modules['branch5'].apply(constraints)
-            model._modules['branch6'].apply(constraints)
 
-        # loss functions
-        # self.criterion = []
-        # for i in range(7):
-        #     if class_weights is not None:
-        #         self.criterion.append(torch.nn.BCELoss(weight=class_weights[i]))
-        #     else:
-        #         self.criterion.append(torch.nn.BCELoss())
         if class_weights is not None:
             self.criterion = torch.nn.BCELoss(weight=class_weights)
         else:

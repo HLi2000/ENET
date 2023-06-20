@@ -1,3 +1,7 @@
+"""
+EczemaNet's prediction model
+"""
+
 import torch
 from torchvision.models import MobileNet_V2_Weights, mobilenet_v2
 

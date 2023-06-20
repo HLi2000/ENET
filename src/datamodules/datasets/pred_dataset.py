@@ -1,9 +1,9 @@
-import random
+"""
+Dataset of prediction network
+"""
 
 import torch
 import pathlib
-
-from matplotlib import pyplot as plt
 # import matplotlib.pyplot as plt
 from skimage.io import imread
 from typing import List, Dict

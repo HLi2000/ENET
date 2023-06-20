@@ -1,3 +1,7 @@
+"""
+To test the segmentation network and save crops/segmentations and corresponding metadata
+"""
+
 import csv
 import pathlib
 import pyrootutils

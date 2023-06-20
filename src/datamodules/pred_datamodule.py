@@ -1,3 +1,7 @@
+"""
+To load data and choose preprocessing methods
+"""
+
 import pathlib
 import random
 from typing import Any, Dict, Optional, Tuple
@@ -7,10 +11,7 @@ import pandas as pd
 import torch
 import albumentations as A
 from pytorch_lightning import LightningDataModule
-from sklearn.utils import compute_class_weight
 from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
-from torchvision.datasets import MNIST
-from torchvision.transforms import transforms
 
 from src.datamodules.components.transfroms import ComposeDouble, FunctionWrapperDouble, normalize_01, \
     PredAlbumentationWrapper
@@ -183,6 +184,7 @@ class PredDataModule(LightningDataModule):
         This method is called by lightning with both `trainer.fit()` and `trainer.test()`, so be
         careful not to execute things like random split twice!
         """
+        ## for crops
         if self.hparams.crop:
             auto_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_{self.hparams.method}_crop_{self.hparams.perturbation}.csv"
             auto_csv = pd.read_csv(auto_csv_dir)
@@ -213,6 +215,7 @@ class PredDataModule(LightningDataModule):
             csv_train = pd.concat([auto_csv_train, man_csv_train])
             # csv = man_csv
         else:
+            ## for segmentations
             if self.hparams.method == 'seg':
                 auto_csv_dir = self.data_dir / f"metadata_{self.hparams.seg_type}_{self.hparams.method}_whole_{self.hparams.perturbation}.csv"
                 auto_csv = pd.read_csv(auto_csv_dir)
@@ -240,6 +243,7 @@ class PredDataModule(LightningDataModule):
                 csv_val = auto_csv_val
                 csv_train = pd.concat([auto_csv_train, man_csv_train])
             else:
+                ## for original whole inputs
                 csv_dir = self.data_dir / f"metadata.csv"
                 csv = pd.read_csv(csv_dir)
 

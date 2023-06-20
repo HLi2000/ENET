@@ -1,3 +1,7 @@
+"""
+To test the ROI network and save crops and corresponding metadata
+"""
+
 import csv
 import pathlib
 import pyrootutils

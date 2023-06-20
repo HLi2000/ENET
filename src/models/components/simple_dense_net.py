@@ -1,3 +1,7 @@
+"""
+Simple DenseNet
+"""
+
 from torch import nn
 
 

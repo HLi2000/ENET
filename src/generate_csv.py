@@ -1,15 +1,16 @@
-import pyrootutils
-import os
-import pathlib
+"""
+To generate csv file of metadata
 
-# root = pathlib.Path(os.path.abspath(''))
-# pyrootutils.set_root(
-#     path=root, # path to the root directory
-#     project_root_env_var=True, # set the PROJECT_ROOT environment variable to root directory
-#     dotenv=True, # load environment variables from .env if exists in root directory
-#     pythonpath=True, # add root directory to the PYTHONPATH (helps with imports)
-#     cwd=True, # change current working directory to the root directory (helps with filepaths)
-# )
+The keys blow (from original EczemaNet code) show how to choose signs for a specific score in SWET:
+ALL_COMBINED_KEYS = {
+        "sassad_tot": ['sassad_cra', 'sassad_dry', 'tiss_ery', 'tiss_exc', 'sassad_exu', 'sassad_lic'],
+        "scorad_tot": ['tiss_ery', 'tiss_oed', 'sassad_exu', 'tiss_exc', 'sassad_lic', 'sassad_dry'],
+        "easi_tot": ['tiss_ery', 'tiss_oed', 'tiss_exc', 'sassad_lic'],
+        "tiss_tot": ['tiss_ery', 'tiss_oed', 'tiss_exc']
+    }
+"""
+
+import pyrootutils
 
 root = pyrootutils.setup_root(
     search_from=__file__,
@@ -69,6 +70,7 @@ for DATASET in ['SWET', 'TLA']:
                     writer.writerow(
                         [ori_file['refno'].get(index), ori_file['visno'].get(index),
                          ori_file['ethnic'].get(index).lower(),
+                         # here to choose signs
                          int(ori_file['sassad_cra'].get(index)),
                          int(ori_file['sassad_dry'].get(index)),
                          int(ori_file['tiss_ery'].get(index)),

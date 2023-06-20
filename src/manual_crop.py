@@ -1,15 +1,9 @@
-import pyrootutils
-import os
-import pathlib
+"""
+To generate manual crops/boxes/segmentations for training ROI detection networks and inputting to prediction network
+"""
 
-# root = pathlib.Path(os.path.abspath(''))
-# pyrootutils.set_root(
-#     path=root, # path to the root directory
-#     project_root_env_var=True, # set the PROJECT_ROOT environment variable to root directory
-#     dotenv=True, # load environment variables from .env if exists in root directory
-#     pythonpath=True, # add root directory to the PYTHONPATH (helps with imports)
-#     cwd=True, # change current working directory to the root directory (helps with filepaths)
-# )
+import pyrootutils
+import pathlib
 
 root = pyrootutils.setup_root(
     search_from=__file__,
@@ -36,10 +30,11 @@ from src.utils.seg import collate_double_seg
 log = utils.get_pylogger(__name__)
 
 def crop(cfg: DictConfig) -> Tuple[dict, dict]:
-    SEGMENTATION = 'skin'
+    SEGMENTATION = 'skin' # 'skin' or 'ad'
     PERTURBATION = 'base'
     DATASET = 'TLA'
-    METHOD = 'whole'
+    METHOD = 'whole' # 'whole' or 'seg' or 'ROI'
+    # 'whole' for whole segmentation, 'seg' for background-removed crops, 'ROI' for crops with backgrounds
     print("Program initiating... \nType of segmentation: " + SEGMENTATION + "\nType of perturbation: " + METHOD)
 
     DATA_DIR = cfg.paths.data_dir
